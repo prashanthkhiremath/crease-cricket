@@ -1,0 +1,21 @@
+{
+  "name": "crease-cricket",
+  "private": true,
+  "version": "0.5.0",
+  "type": "module",
+  "description": "3D T20 cricket game for the browser",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "build:artifact": "ARTIFACT=1 vite build && node scripts/make-artifact.mjs",
+    "smoke": "node scripts/smoke.cjs"
+  },
+  "dependencies": {
+    "three": "0.169.0"
+  },
+  "devDependencies": {
+    "vite": "5.4.10",
+    "vite-plugin-singlefile": "2.0.3"
+  }
+}

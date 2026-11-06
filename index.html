@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Crease Cricket</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;700;800&family=Barlow:wght@400;600&display=swap">
+</head>
+<body>
+<div id="app">
+  <canvas id="c"></canvas>
+  <div id="hud" hidden>
+    <div id="top" class="pad">
+      <div class="strip">
+        <div class="s-team">YOUR XI</div>
+        <div class="s-score"><span id="score">0/0</span><small id="overs">0.0</small></div>
+        <div class="s-chase" id="chase"></div>
+        <div class="s-rates">CRR <b id="crr">0.00</b> · RRR <b id="rrr">0.00</b></div>
+      </div>
+      <div class="row2">
+        <div class="card" id="batcard"></div>
+        <div class="card" id="bowlcard"></div>
+      </div>
+      <div id="over"></div>
+    </div>
+    <div id="speed"><div class="kmh"><span id="kmh">0</span><small>km/h</small></div><div class="ty" id="dtype"></div></div>
+    <div id="freehit" hidden>FREE HIT</div>
+    <div id="flash"><div class="big" id="fbig"></div><div class="sub" id="fsub"></div></div>
+    <div id="timing"></div>
+    <div id="drs" hidden></div>
+    <button class="btn" id="mute" type="button">Sound on</button>
+    <div id="bottom" class="pad">
+      <div id="meter" hidden><div class="bar"><div id="needle"></div></div><span id="meterlbl">AIM, THEN PRESS BOWL</span></div>
+      <div id="comm"></div>
+      <div id="controls">
+        <div id="bowlctl" hidden>
+          <div class="grp" id="dtypes"></div>
+          <div class="grp"><button class="btn bowl" id="b-bowl" type="button">Bowl<kbd>Space</kbd></button></div>
+        </div>
+        <div id="batctl">
+        <div class="grp">
+          <button class="btn dir" data-dir="off" id="b-off" type="button">◀ Off<kbd>← A</kbd></button>
+          <button class="btn dir" data-dir="straight" id="b-str" type="button">▲ Str<kbd>↑ W</kbd></button>
+          <button class="btn dir" data-dir="leg" id="b-leg" type="button">Leg ▶<kbd>→ D</kbd></button>
+          <button class="btn dir" data-dir="block" id="b-blk" type="button">Block<kbd>↓ S</kbd></button>
+        </div>
+        <div class="grp">
+          <button class="btn" id="b-charge" type="button">Step out<kbd>C</kbd></button>
+          <button class="btn run" id="b-run" type="button">Run<kbd>R</kbd></button>
+          <button class="btn hit" id="b-hit" type="button">Drive<kbd>Space</kbd></button>
+          <button class="btn loft" id="b-loft" type="button">Loft<kbd>L</kbd></button>
+        </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="menu" class="screen pad">
+    <div class="panel">
+      <div class="brand"><div class="k">T20 RUN CHASE</div><h1>CREASE <span>CRICKET</span></h1></div>
+      <p class="lede">The Opposition XI have posted a total. Time your shots, pick your gaps and run hard to chase it down under the lights.</p>
+      <div>
+        <div class="lab">YOU WANT TO</div>
+        <div class="opts two" id="roles">
+          <button class="opt sel" type="button" data-role="bat" id="r0"><b>Bat</b><span>Chase the Opposition XI total</span></button>
+          <button class="opt" type="button" data-role="bowl" id="r1"><b>Bowl</b><span>Defend your total against their batters</span></button>
+        </div>
+      </div>
+      <div>
+        <div class="lab">FORMAT</div>
+        <div class="opts" id="modes">
+          <button class="opt sel" type="button" data-mode="0" id="m0"><b>Quick chase</b><span>2 overs · 3 wickets</span></button>
+          <button class="opt" type="button" data-mode="1" id="m1"><b>Powerplay</b><span>5 overs · 5 wickets</span></button>
+          <button class="opt" type="button" data-mode="2" id="m2"><b>Full T20</b><span>20 overs · 10 wickets</span></button>
+        </div>
+      </div>
+      <div>
+        <div class="lab">DIFFICULTY</div>
+        <div class="opts" id="diffs">
+          <button class="opt" type="button" data-diff="easy" id="d0"><b>Club</b><span>Wider timing, softer hands in the field</span></button>
+          <button class="opt sel" type="button" data-diff="normal" id="d1"><b>Domestic</b><span>Balanced</span></button>
+          <button class="opt" type="button" data-diff="hard" id="d2"><b>International</b><span>Tight timing, sharp fielders</span></button>
+        </div>
+      </div>
+      <div class="help">
+        <b>TIMING</b><span>Press Drive (Space) or Loft (L) as the ball reaches the bat. Watch it pitch.</span>
+        <b>DIRECTION</b><span>Pick Off, Straight or Leg before the shot. Early timing pulls it leg side, late timing runs it fine.</span>
+        <b>BLOCK</b><span>Choose Block, then Drive, to defend a yorker or a jaffa.</span>
+        <b>RUNNING</b><span>Tap Run (R) once per run. Get caught short and you are run out.</span>
+        <b>STEP OUT</b><span>Charge the spinners (C) before release. Miss it and the keeper stumps you.</span>
+        <b>BOWLING</b><span>Drag on the pitch (or use the arrow keys) to aim, pick a delivery (1–5), press Bowl (Space), then press again with the needle in the green to release.</span>
+      </div>
+      <button class="play" id="play" type="button">PLAY</button>
+    </div>
+  </div>
+
+  <div id="result" class="screen pad" hidden>
+    <div class="panel">
+      <div class="lab" id="r-k">RESULT</div>
+      <h2 class="res-h" id="r-h"></h2>
+      <p class="lede" id="r-sub"></p>
+      <div class="tbl-wrap"><table id="r-tbl"></table></div>
+      <div class="btns"><button class="play" id="again" type="button">PLAY AGAIN</button><button class="play ghost" id="tomenu" type="button">CHANGE FORMAT</button></div>
+    </div>
+  </div>
+</div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

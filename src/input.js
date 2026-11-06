@@ -1,0 +1,42 @@
+// input.js — generated from the prototype; edit freely.
+import { $ } from './config.js';
+import { Snd } from './audio.js';
+import { M, game, input, newMatch } from './match.js';
+import { charge, shot } from './batting.js';
+import { callRun } from './fielding.js';
+import { bowlPress, nudgeAim, pickType } from './bowlmode.js';
+
+// ================= input =================
+function setDir(d){ if(game.phase==='live'||game.phase==='dead'||game.phase==='menu'||game.phase==='result') return; if(input.pressT!==null) return; input.dir=input.dir===d?'auto':d; syncDirBtns(); }
+function syncDirBtns(){ document.querySelectorAll('.dir').forEach(b=>b.classList.toggle('sel',b.dataset.dir===input.dir)); $('b-charge').classList.toggle('sel',input.charge); }
+const press=(id,fn)=>{ const el=$(id); el.addEventListener('pointerdown',e=>{e.preventDefault(); Snd.init(); fn();}); el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();fn();}}); };
+document.querySelectorAll('.dir').forEach(b=>press(b.id,()=>setDir(b.dataset.dir)));
+press('b-hit',()=>shot(false));
+ press('b-loft',()=>shot(true));
+ press('b-run',callRun);
+ press('b-charge',charge);
+$('mute').addEventListener('click',()=>{ Snd.init(); Snd.on=!Snd.on; $('mute').textContent=Snd.on?'Sound on':'Sound off'; if(Snd.master) Snd.master.gain.value=Snd.on?.8:0; });
+window.addEventListener('keydown',e=>{
+  if(game.phase==='menu'||game.phase==='result'){ if(e.key==='Enter'&&document.activeElement.tagName!=='BUTTON'){ Snd.init(); newMatch(); } return; }
+  const k=e.key.toLowerCase(); let used=true;
+  if(M&&M.role==='bowl'){
+    if(k==='arrowleft'||k==='a') nudgeAim(.06,0); else if(k==='arrowright'||k==='d') nudgeAim(-.06,0);
+    else if(k==='arrowup'||k==='w') nudgeAim(0,-.3); else if(k==='arrowdown'||k==='s') nudgeAim(0,.3);
+    else if(k===' '||k==='enter') bowlPress(); else if(/^[1-5]$/.test(k)) pickType(+k-1); else used=false;
+    if(used){ e.preventDefault(); Snd.init(); } return;
+  }
+  if(k==='arrowleft'||k==='a') setDir('off'); else if(k==='arrowright'||k==='d') setDir('leg');
+  else if(k==='arrowup'||k==='w') setDir('straight'); else if(k==='arrowdown'||k==='s') setDir('block');
+  else if(k===' '||k==='j') shot(false); else if(k==='l'||k==='k'||k==='shift') shot(true);
+  else if(k==='r') callRun(); else if(k==='c') charge(); else used=false;
+  if(used){ e.preventDefault(); Snd.init(); }
+});
+document.querySelectorAll('#roles .opt').forEach(b=>b.addEventListener('click',()=>{ game.role=b.dataset.role; document.querySelectorAll('#roles .opt').forEach(x=>x.classList.toggle('sel',x===b)); }));
+press('b-bowl',()=>bowlPress());
+document.querySelectorAll('#modes .opt').forEach(b=>b.addEventListener('click',()=>{ game.modeIdx=+b.dataset.mode; document.querySelectorAll('#modes .opt').forEach(x=>x.classList.toggle('sel',x===b)); }));
+document.querySelectorAll('#diffs .opt').forEach(b=>b.addEventListener('click',()=>{ game.diff=b.dataset.diff; document.querySelectorAll('#diffs .opt').forEach(x=>x.classList.toggle('sel',x===b)); }));
+$('play').addEventListener('click',()=>{ Snd.init(); newMatch(); });
+$('again').addEventListener('click',()=>{ newMatch(); });
+$('tomenu').addEventListener('click',()=>{ $('result').hidden=true; $('menu').hidden=false; game.phase='menu'; });
+
+export { setDir, syncDirBtns, press };
