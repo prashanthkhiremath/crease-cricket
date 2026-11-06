@@ -33,6 +33,7 @@ class Rig{
     const J=this.j={};
     const add=(parent,name,x,y,z)=>{const g=new THREE.Group(); g.position.set(x,y,z); parent.add(g); if(name) J[name]=g; return g;};
     const mesh=(parent,geo,m,x=0,y=0,z=0,sx=1,sy=1,sz=1)=>{const me=new THREE.Mesh(geo,m); me.position.set(x,y,z); me.scale.set(sx,sy,sz); me.castShadow=true; me.userData.drv=true; parent.add(me); return me;};
+    this.dim={thigh:.44,shin:.44,foot:.105,hipDrop:0,upper:.3,fore:.31};
     const hips=add(root,'hips',0,.98,0);
     mesh(hips,new THREE.SphereGeometry(.16,16,12),pants,0,-.02,0,1.15,.75,.85);
     for(const s of [1,-1]){
@@ -88,14 +89,25 @@ class Rig{
     for(const n in this.j){ if(n==='hips') continue; const t=p[n]||ZERO3, r=this.j[n].rotation; r.x+=(t[0]-r.x)*k; r.y+=(t[1]-r.y)*k; r.z+=(t[2]-r.z)*k; }
     const hr=p.hipsR||ZERO3, h=this.j.hips.rotation; h.x+=(hr[0]-h.x)*k; h.y+=(hr[1]-h.y)*k; h.z+=(hr[2]-h.z)*k;
     // keep the lower foot on the ground
-    let hy=0; for(const [a,b] of this.legs){ const ta=this.j[a].rotation, tb=this.j[b].rotation; const c=Math.cos(ta.z)*Math.cos(h.x*.5); const v=.44*Math.cos(ta.x)*c+.44*Math.cos(ta.x+tb.x)*c+.105; if(v>hy) hy=v; }
+    let hy=0; for(const [a,b] of this.legs){ const ta=this.j[a].rotation, tb=this.j[b].rotation; const c=Math.cos(ta.z)*Math.cos(h.x*.5); const D=this.dim, v=D.hipDrop+D.thigh*Math.cos(ta.x)*c+D.shin*Math.cos(ta.x+tb.x)*c+D.foot; if(v>hy) hy=v; }
     this.j.hips.position.y=hy+(p.lift||0);
+  }
+  // match the rig's proportions to a character model (joint positions measured in its rest pose, metres)
+  fitTo(m){
+    const J=this.j, D=this.dim;
+    for(const [s,k] of [[1,'l'],[-1,'r']]){
+      J[k+'Thigh'].position.set(m.upLegX*s,-m.hipDrop,0); J[k+'Shin'].position.y=-m.thigh; J[k+'Foot'].position.y=-m.shin;
+      J[k+'Upper'].position.set(m.shoulderX*s,m.shoulderY-m.chestY,m.shoulderZ); J[k+'Fore'].position.y=-m.upper; J[k+'Hand'].position.y=-m.fore;
+    }
+    J.spine.position.y=.06; J.chest.position.y=m.chestY-m.hipY-.06;
+    J.neck.position.y=m.neckY-m.chestY; J.head.position.y=m.headY-m.neckY;
+    Object.assign(D,{thigh:m.thigh,shin:m.shin,foot:m.ankleY,hipDrop:m.hipDrop,upper:m.upper,fore:m.fore});
   }
   face(x,z){ this.root.rotation.y=Math.atan2(x-this.root.position.x,z-this.root.position.z); }
   ik(side,target,pole){
     const up=this.j[side+'Upper'], fo=this.j[side+'Fore'], chest=up.parent;
     const t=chest.worldToLocal(_v1.copy(target)), s=up.position;
-    const d=_v2.copy(t).sub(s); const L1=.3, L2=.31; let len=clamp(d.length(),.08,L1+L2-.002); d.setLength(len);
+    const d=_v2.copy(t).sub(s); const L1=this.dim.upper, L2=this.dim.fore; let len=clamp(d.length(),.08,L1+L2-.002); d.setLength(len);
     const A=Math.acos(clamp((L1*L1+len*len-L2*L2)/(2*L1*len),-1,1));
     const n=_v3.copy(d).cross(pole).normalize();
     const ud=_v4.copy(d).normalize().applyAxisAngle(n,A);

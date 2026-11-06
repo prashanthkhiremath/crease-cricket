@@ -24,7 +24,7 @@ async function playMode(browser, url, role) {
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource|fonts\.g/.test(m.text())) errors.push(m.text()); });
   await page.goto(url);
-  await page.waitForFunction(() => window.__game, null, { timeout: 20000 });
+  await page.waitForFunction(() => window.__game, null, { timeout: 60000 });
   await page.click(role === 'bowl' ? '#r1' : '#r0');
   await page.click('#play');
   // simple autoplayer: bats with near-perfect timing, or bowls with a centred release
@@ -49,6 +49,7 @@ async function playMode(browser, url, role) {
     await page.waitForTimeout(500);
   }
   console.log(`${role}: ${st ? `${st.balls} ball(s) bowled, score ${st.score}, phase ${st.phase}` : 'match did not start'}`);
+  await page.waitForFunction(() => window.__game.SKIN.src, null, { timeout: 240000 }).catch(() => {});
   const skinned = await page.evaluate(() => !!window.__game.SKIN.src);
   if (SHOTS) { fs.mkdirSync(SHOTS, { recursive: true }); await page.screenshot({ path: path.join(SHOTS, `${role}.png`) }); }
   await page.close();

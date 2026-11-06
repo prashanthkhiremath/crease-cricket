@@ -48,7 +48,7 @@ function aiPlan(d){
   let err=gauss()*(.025+q*.085)*sk; if(/Slower/.test(d.name)) err-=.045*sk;
   return {dir,loft,pressT:d.tContact+err};
 }
-function recolor(r,k){ const S=r.skin; if(!S||!S.cols) return; S.cols[1].set(k.shirt); if(r.o.longSleeve) S.cols[2].set(k.shirt); S.cols[4].set(k.pants); if(S.capMat) S.capMat.color.set(k.cap); }
+function recolor(r,k){ const S=r.skin; if(!S) return; if(S.kit){ S.kit.shirt.color.set(k.shirt); S.kit.pants.color.set(k.pants); } else if(S.cols){ S.cols[1].set(k.shirt); if(r.o.longSleeve) S.cols[2].set(k.shirt); S.cols[4].set(k.pants); } if(S.capMat) S.capMat.color.set(k.cap); }
 function applyKits(){ if(!M) return; const bat=M.role==='bowl'?KIT_OPP:KIT_YOU, fld=M.role==='bowl'?KIT_YOU:KIT_OPP; recolor(SR,bat); recolor(NR,bat); recolor(BR,fld); fielders.forEach((f,i)=>{ if(i>0) recolor(f.rig,fld); }); }
 
 export { aimMarker, meterPos, meterErr, updateAimInfo, nudgeAim, pickType, buildTypeButtons, bowlPress, aiPlan, recolor, applyKits };

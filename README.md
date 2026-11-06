@@ -51,7 +51,8 @@ src/
   loop.js           main loop and phase machine
   input.js          keyboard and touch input
   audio.js          synthesised sound effects
-public/models/      3D player model (Mixamo X Bot, embedded glTF)
+public/models/      player models: players/ (generated squad) and xbot.json (fallback mannequin)
+tools/athletes/     squad generator (MakeHuman/MPFB2 in Blender), see its README
 prototype/          the original single-file version, kept for reference
 scripts/            artifact packaging and smoke test
 ```
@@ -73,4 +74,4 @@ All teams and players are fictional.
 
 ## Credits
 
-Player model: X Bot by Mixamo (Adobe), used under Mixamo's terms for use in projects. Built with [Three.js](https://threejs.org).
+Players: generated with [MakeHuman](http://www.makehumancommunity.org) via [MPFB2](https://github.com/makehumancommunity/mpfb2); MakeHuman output, base mesh, eyes and region masks are CC0. Fallback mannequin: X Bot by Mixamo (Adobe), used under Mixamo's terms for use in projects. Built with [Three.js](https://threejs.org).

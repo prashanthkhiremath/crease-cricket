@@ -13,7 +13,19 @@ const _w1=new THREE.Vector3(),_w2=new THREE.Vector3(),_w3=new THREE.Vector3(),_w
 function regionOf(n){ n=n.replace(/mixamorig:?/,'');
   if(/Head|Neck|Eye/.test(n)) return 0; if(/Hand/.test(n)) return 3; if(/ForeArm/.test(n)) return 2;
   if(/Arm|Shoulder|Spine/.test(n)) return 1; if(/Foot|Toe/.test(n)) return 5; return 4; }
+// Realistic squad generated with MakeHuman/MPFB2 (see tools/athletes): seven players and an umpire.
+const ROSTER=['p1','p2','p3','p4','p5','p6','p7'];
 function loadAthletes(){
+  const loader=new GLTFLoader(), base=import.meta.env.BASE_URL+'models/players/';
+  Promise.all([...ROSTER,'ump'].map(k=>loader.loadAsync(base+k+'.json').then(g=>[k,g.scene])))
+    .then(list=>{
+      SKIN.variants=Object.fromEntries(list); SKIN.src=SKIN.variants.p1;
+      ALL_RIGS().forEach((r,i)=>{ try{ attachAthlete(r,SKIN.variants[(r===umpire||r===umpire2)?'ump':ROSTER[(i*3+1)%ROSTER.length]],true); }catch(e){ console.warn('player setup failed',e); } });
+      applyKits();
+    })
+    .catch(e=>{ console.warn('squad models unavailable, trying the mannequin',e); loadMannequin(); });
+}
+function loadMannequin(){
   new GLTFLoader().load(import.meta.env.BASE_URL+'models/xbot.json',g=>{
     try{
       g.scene.traverse(o=>{ if(!o.isSkinnedMesh) return;
@@ -22,7 +34,7 @@ function loadAthletes(){
         geo.setAttribute('region',new THREE.BufferAttribute(reg,1));
       });
       SKIN.src=g.scene;
-      for(const r of ALL_RIGS()) attachAthlete(r);
+      for(const r of ALL_RIGS()) attachAthlete(r,SKIN.src,false);
       applyKits();
     }catch(e){ console.warn('athlete setup failed',e); }
   },undefined,e=>console.warn('athlete model unavailable, using simple players',e));
@@ -47,29 +59,58 @@ function attachAt(bone,obj,root,off,rotY=0){ // place obj (built in metres, worl
 }
 function numberDecal(num,col){ const t=canvasTex(128,128,(x,w,h)=>{x.clearRect(0,0,w,h);x.fillStyle=col;x.font='800 92px "Saira Condensed","Arial Narrow",Arial,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(String(num),w/2,h/2+4);});
   return new THREE.Mesh(new THREE.PlaneGeometry(.2,.2),new THREE.MeshStandardMaterial({map:t,transparent:true,roughness:.8,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2})); }
-function attachAthlete(r){
-  const o=r.o, sc=SkeletonUtils.clone(SKIN.src); sc.updateMatrixWorld(true);
+// MakeHuman's eye texture keeps the clear cornea in a transparent circle (bottom right); the JPEG export loses
+// that alpha, so cut the cornea out with a matching mask (glTF UVs: image top-left origin, no flip)
+let _cornea=null;
+function corneaMask(){ if(_cornea) return _cornea;
+  const c=document.createElement('canvas'); c.width=c.height=256; const x=c.getContext('2d');
+  x.fillStyle='#fff'; x.fillRect(0,0,256,256); x.fillStyle='#000'; x.beginPath(); x.arc(256*.94,256*.94,256*.075,0,7); x.fill();
+  _cornea=new THREE.CanvasTexture(c); _cornea.flipY=false; return _cornea; }
+function attachAthlete(r,src,roster){
+  const o=r.o, sc=SkeletonUtils.clone(src); sc.updateMatrixWorld(true);
   const B={}; sc.traverse(n=>{ if(n.isBone) B[n.name.replace(/mixamorig:?/,'')]=n; });
   if(!B.Hips||!B.LeftArm) return;
-  const skin=r.skinHex, shirt=new THREE.Color(o.shirt).getHex();
-  const pal=[skin, shirt, o.longSleeve?shirt:skin, o.gloves||skin, o.pants, o.shoes||0xf2f2f2];
-  const m=kitMaterial(pal);
-  sc.traverse(n=>{ if(n.isSkinnedMesh){ n.material=m; n.castShadow=true; n.frustumCulled=false; } });
-  // kit pieces on bones
+  const shirt=new THREE.Color(o.shirt).getHex(); let m=null, kit=null;
+  if(roster){
+    // textured body; clothing meshes get the team colours
+    const umpireKit=r===umpire||r===umpire2;
+    kit={shirt:mat(shirt,{roughness:.82,side:THREE.DoubleSide}),pants:mat(o.pants,{roughness:.85,side:THREE.DoubleSide}),shoes:mat(umpireKit?0x1a1a1a:0xf2f2f2,{roughness:.5,side:THREE.DoubleSide})};
+    sc.traverse(n=>{ if(!n.isSkinnedMesh) return; n.castShadow=true; n.frustumCulled=false;
+      const nm=(n.name+' '+(n.parent?n.parent.name:'')).toLowerCase();
+      if(nm.includes('shirt')) n.material=kit.shirt; else if(nm.includes('pants')) n.material=kit.pants; else if(nm.includes('shoes')) n.material=kit.shoes;
+      else if(n.material&&n.material.name==='eyes'){ n.material.alphaMap=corneaMask(); n.material.alphaTest=.5; n.material.roughness=.2; }
+      else if(n.material){ n.material.roughness=Math.max(.5,n.material.roughness||0); n.material.metalness=0; } });
+  } else {
+    const skin=r.skinHex;
+    m=kitMaterial([skin, shirt, o.longSleeve?shirt:skin, o.gloves||skin, o.pants, o.shoes||0xf2f2f2]);
+    sc.traverse(n=>{ if(n.isSkinnedMesh){ n.material=m; n.castShadow=true; n.frustumCulled=false; } });
+  }
+  // measure this model in its rest pose so kit pieces fit any head and body size
   const H=B.Head; let capMat=null;
+  const hb=H.getWorldPosition(new THREE.Vector3()), v=new THREE.Vector3();
+  let headTop=-1, hx=0, hz=0, hn=0, backZ=1e9; const chestY=B.Spine2.getWorldPosition(new THREE.Vector3()).y;
+  sc.traverse(n=>{ if(!n.isSkinnedMesh) return; const pa=n.geometry.attributes.position, nm=(n.name+' '+(n.parent?n.parent.name:'')).toLowerCase();
+    for(let i=0;i<pa.count;i+=3){ v.fromBufferAttribute(pa,i); n.applyBoneTransform(i,v); v.applyMatrix4(n.matrixWorld);
+      if(v.y>headTop) headTop=v.y;
+      if(v.y>hb.y+.04){ hx+=v.x; hz+=v.z; hn++; }
+      if((nm.includes('shirt')||!roster)&&Math.abs(v.y-chestY)<.06&&Math.abs(v.x)<.06&&v.z<backZ) backZ=v.z; } });
+  const headC=new THREE.Vector3(hn?hx/hn-hb.x:0,0,hn?hz/hn-hb.z:0);
+  const fitY=(below)=>headTop-below-hb.y;
   if(o.helmet){ const g=new THREE.Group(), hm=mat(o.helmet,{roughness:.35,metalness:.1}), gr=mat(0xb8bcc4,{metalness:.8,roughness:.3});
     const dome=new THREE.Mesh(new THREE.SphereGeometry(.128,20,14,0,Math.PI*2,0,Math.PI*.56),hm); dome.scale.set(1,1.02,1.12); g.add(dome);
     const peak=new THREE.Mesh(new THREE.BoxGeometry(.2,.014,.08),hm); peak.position.set(0,.02,.15); peak.rotation.x=.18; g.add(peak);
-    for(const gy of [-.03,-.07,-.11]){ const t=new THREE.Mesh(new THREE.TorusGeometry(.118,.006,6,18,Math.PI),gr); t.rotation.x=Math.PI/2; t.rotation.z=Math.PI; t.position.set(0,gy,.03); t.scale.set(1,1.18,1); g.add(t); }
-    const bar=new THREE.Mesh(new THREE.BoxGeometry(.012,.1,.012),gr); bar.position.set(0,-.07,.165); g.add(bar);
-    attachAt(H,g,sc,new THREE.Vector3(0,.115,.005)); }
+    const gb=roster?[[-.05,.106],[-.092,.096]]:[[-.03,.118],[-.07,.118],[-.11,.118]];
+    for(const [gy,rr] of gb){ const t=new THREE.Mesh(new THREE.TorusGeometry(rr,.005,6,18,Math.PI),gr); t.rotation.x=Math.PI/2; t.position.set(0,gy,.012); t.scale.set(.95,1.22,1); g.add(t); }
+    const bar=new THREE.Mesh(new THREE.BoxGeometry(.01,roster?.06:.1,.01),gr); bar.position.set(0,roster?-.07:-.07,roster?.13:.165); g.add(bar);
+    attachAt(H,g,sc,new THREE.Vector3(headC.x,fitY(.085),headC.z+.005)); }
   else if(o.cap){ const g=new THREE.Group(), cm=mat(o.cap,{roughness:.7}); capMat=cm;
-    const d=new THREE.Mesh(new THREE.SphereGeometry(.112,18,10,0,Math.PI*2,0,Math.PI*.5),cm); d.scale.set(1,.85,1.08); g.add(d);
-    const br=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,.01,18,1,false,-Math.PI/2,Math.PI),cm); br.position.set(0,.005,.08); br.scale.set(1,1,1.15); g.add(br);
-    attachAt(H,g,sc,new THREE.Vector3(0,.12,.01)); }
+    const cr=roster?.098:.112;
+    const d=new THREE.Mesh(new THREE.SphereGeometry(cr,18,10,0,Math.PI*2,0,Math.PI*.5),cm); d.scale.set(1,.82,1.1); g.add(d);
+    const br=new THREE.Mesh(new THREE.CylinderGeometry(cr*.8,cr*.8,.008,18,1,false,-Math.PI/2,Math.PI),cm); br.position.set(0,.004,cr*.72); br.scale.set(1,1,1.15); br.rotation.x=.12; g.add(br);
+    attachAt(H,g,sc,new THREE.Vector3(headC.x,fitY(roster?.08:.07),headC.z+.008)); }
   else if(o.hat){ const g=new THREE.Group(), hm=mat(o.hat,{roughness:.8});
     const b1=new THREE.Mesh(new THREE.CylinderGeometry(.17,.17,.012,22),hm); g.add(b1); const b2=new THREE.Mesh(new THREE.CylinderGeometry(.1,.112,.08,18),hm); b2.position.y=.04; g.add(b2);
-    attachAt(H,g,sc,new THREE.Vector3(0,.13,0)); }
+    attachAt(H,g,sc,new THREE.Vector3(headC.x,fitY(.035),headC.z)); }
   if(o.pads){ const pm=mat(0xf4f2ea,{roughness:.6});
     for(const s of ['Left','Right']){ const g=new THREE.Group();
       const sh=new THREE.Mesh(new THREE.BoxGeometry(.16,.46,.075),pm); g.add(sh);
@@ -79,7 +120,11 @@ function attachAthlete(r){
   }
   if(o.gloves){ const gm=mat(o.gloves,{roughness:.6});
     for(const s of ['Left','Right']){ const g=new THREE.Mesh(new THREE.BoxGeometry(.13,.06,.1),gm); attachAt(B[s+'Hand'],g,sc,new THREE.Vector3(s==='Left'?.06:-.06,0,0)); } }
-  if(o.num!==''&&o.num!==undefined){ const d=numberDecal(o.num,o.trim||'#ffffff'); attachAt(B.Spine2,d,sc,new THREE.Vector3(0,.03,-.135),Math.PI); }
+  if(o.num!==''&&o.num!==undefined){ const d=numberDecal(o.num,o.trim||'#ffffff'); attachAt(B.Spine2,d,sc,new THREE.Vector3(0,.03,(backZ<1e8?backZ-.006:-.135)-B.Spine2.getWorldPosition(new THREE.Vector3()).z),Math.PI); }
+  // fit the pose rig to this model's proportions (rest pose, model space)
+  { const w=n=>B[n].getWorldPosition(new THREE.Vector3()), hip=w('Hips'), ul=w('LeftUpLeg'), kn=w('LeftLeg'), an=w('LeftFoot'), sp=w('Spine2'), nk=w('Neck'), hd=w('Head'), sh=w('LeftArm'), el=w('LeftForeArm'), wr=w('LeftHand');
+    r.fitTo({hipY:hip.y,hipDrop:hip.y-ul.y,upLegX:Math.abs(ul.x),thigh:ul.distanceTo(kn),shin:kn.distanceTo(an),ankleY:an.y,
+      chestY:sp.y,neckY:nk.y,headY:hd.y,shoulderX:Math.abs(sh.x),shoulderY:sh.y,shoulderZ:sh.z-sp.z,upper:sh.distanceTo(el),fore:el.distanceTo(wr)}); }
   // rest data for retargeting
   const rest={};
   for(const k in B){ const b=B[k]; rest[k]={q:b.quaternion.clone(), wq:b.getWorldQuaternion(new THREE.Quaternion())}; }
@@ -87,7 +132,7 @@ function attachAthlete(r){
   const aims={LeftArm:'LeftForeArm',LeftForeArm:'LeftHand',RightArm:'RightForeArm',RightForeArm:'RightHand',LeftUpLeg:'LeftLeg',LeftLeg:'LeftFoot',RightUpLeg:'RightLeg',RightLeg:'RightFoot'};
   for(const a in aims) rest[a].dir=dirTo(a,aims[a]);
   const len=n=>B[n].getWorldPosition(new THREE.Vector3()).distanceTo(B[aims[n]].getWorldPosition(new THREE.Vector3()));
-  r.skin={sc,B,rest,cols:m.userData.cols,capMat,len:{LeftArm:len('LeftArm'),LeftForeArm:len('LeftForeArm'),RightArm:len('RightArm'),RightForeArm:len('RightForeArm')}};
+  r.skin={sc,B,rest,cols:m?m.userData.cols:null,kit,capMat,hipOff:0,len:{LeftArm:len('LeftArm'),LeftForeArm:len('LeftForeArm'),RightArm:len('RightArm'),RightForeArm:len('RightForeArm')}};
   r.root.add(sc);
   r.root.traverse(n=>{ if(n.isMesh&&n.userData.drv) n.visible=false; });
 }
@@ -114,7 +159,7 @@ function retarget(r){
   const S=r.skin; if(!S) return; const B=S.B, R=S.rest, J=r.j;
   if(!B.Hips.userData.restQ) for(const k in B) B[k].userData.restQ=R[k].q;
   r.root.updateMatrixWorld(true);
-  J.hips.getWorldPosition(_dp); _dp.y+=.055; B.Hips.position.copy(B.Hips.parent.worldToLocal(_dp));
+  J.hips.getWorldPosition(_dp); _dp.y+=S.hipOff; B.Hips.position.copy(B.Hips.parent.worldToLocal(_dp));
   copyOrient(B.Hips,R.Hips.wq,J.hips);
   copyOrient(B.Spine,R.Spine.wq,J.spine); copyOrient(B.Spine1,R.Spine1.wq,J.spine); copyOrient(B.Spine2,R.Spine2.wq,J.chest);
   copyOrient(B.Neck,R.Neck.wq,J.neck); copyOrient(B.Head,R.Head.wq,J.head);

@@ -2,7 +2,7 @@
 import './style.css';
 import { PITCH } from './config.js';
 import { camera, renderer } from './scene.js';
-import { ball, bowler, bshadow, nonStriker, striker } from './players.js';
+import { SR, ball, bowler, bshadow, fielders, nonStriker, striker } from './players.js';
 import { M, game, input, newMatch, setField } from './match.js';
 import { shot } from './batting.js';
 import { callRun } from './fielding.js';
@@ -27,5 +27,5 @@ ball.visible=false; bshadow.visible=false;
 loadAthletes();
 
 // test hook used by scripts/smoke.cjs
-window.__game={game,input,SKIN,get M(){return M;},newMatch,shot,callRun,setDir};
+window.__game={game,input,SKIN,fielders,SR,get M(){return M;},newMatch,shot,callRun,setDir};
 requestAnimationFrame(frame);
