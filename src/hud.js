@@ -9,7 +9,7 @@ import { oversStr } from './scoring.js';
 // ================= messages =================
 let flashTO=null, timingTO=null;
 function flash(big,sub,cls,dur){ const f=$('flash'); f.className='show '+cls; $('fbig').textContent=big; $('fsub').textContent=sub; clearTimeout(flashTO); flashTO=setTimeout(()=>f.className='',dur*1000); }
-function showTiming(txt,cls){ const e=$('timing'); e.textContent=txt; e.style.color=cls==='perfect'?'#34c777':cls==='good'?'#ffc23d':'#ff6b61'; e.classList.add('show'); clearTimeout(timingTO); timingTO=setTimeout(()=>e.classList.remove('show'),900); }
+function showTiming(txt,cls){ const e=$('timing'); e.textContent=txt; e.style.color=cls==='perfect'?'#34c777':cls==='good'?'#ffc23d':'#ff6b61'; e.classList.add('show'); clearTimeout(timingTO); timingTO=setTimeout(()=>e.classList.remove('show'),2000); }
 function comm(t){ $('comm').textContent=t; }
 function showDRS(outsideLeg,impact,hitting,out){
   const e=$('drs'); e.hidden=false;

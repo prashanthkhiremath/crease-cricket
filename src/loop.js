@@ -1,5 +1,6 @@
-// loop.js — generated from the prototype; edit freely.
-import { $, PITCH, RUNUP, lerp } from './config.js';
+// loop.js — main loop and phase machine.
+import { $, PITCH, RUNUP, SPEEDS, lerp } from './config.js';
+import { updateLanding } from './assist.js';
 import { camera, renderer, scene, updateStumps } from './scene.js';
 import { bowler, striker } from './players.js';
 import { M, game, input, nextBall, setField } from './match.js';
@@ -23,7 +24,11 @@ function frame(now){
 function step(dt){
   updateStumps(dt);
   if(game.phase==='menu'||game.phase==='result'){ game.t+=dt; animatePlayers(dt); updateCamera(dt); return; }
+  // ball speed setting slows the run-up and delivery (bat mode only)
+  const slow=M&&M.role==='bat'&&(game.phase==='runup'||game.phase==='delivery');
+  if(slow) dt*=SPEEDS[game.speed]||1;
   game.t+=dt;
+  if(input.pressT!==null&&game.swingT!==undefined) game.swingT+=dt;
   switch(game.phase){
     case 'ready':
       if(game.pendingField&&game.t>0){ game.pendingField=false; setField(); updateHUD(); }
@@ -47,6 +52,7 @@ function step(dt){
   }
   // charge (step out)
   if(input.charge&&game.phase!=='live'){ striker.position.z=Math.max(-2.75,striker.position.z-dt*5); if(game.phase==='delivery'&&!game.del.chargeSet){ game.del.chargeSet=true; setContactZ(game.del);} }
+  updateLanding(game.phase,game.t);
   animatePlayers(dt);
   updateCamera(dt);
 }

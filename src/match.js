@@ -6,10 +6,11 @@ import { NR, SR, ball, bowler, bshadow, clearTrail, fielders, nonStriker, setBat
 import { updateHUD } from './scoring.js';
 import { comm } from './hud.js';
 import { syncDirBtns } from './input.js';
+import { hideLanding } from './assist.js';
 import { applyKits, buildTypeButtons, updateAimInfo } from './bowlmode.js';
 
 // ================= game state =================
-const game={phase:'menu',t:0,mode:MODES[0],modeIdx:0,diff:'normal',role:'bat',aim:{x:.18,len:6.2},dti:0,meter:null};
+const game={phase:'menu',t:0,mode:MODES[0],modeIdx:0,diff:'normal',role:'bat',speed:'real',marker:true,preDel:null,aim:{x:.18,len:6.2},dti:0,meter:null};
 let M=null;
  // match
 const input={dir:'auto',pressT:null,loft:false,charge:false};
@@ -25,6 +26,7 @@ function newMatch(){
   document.querySelector('.s-team').textContent=bowlRole?'OPP XI':'YOUR XI';
   $('batctl').hidden=bowlRole; $('bowlctl').hidden=!bowlRole;
   applyKits(); setField(); nextBall(true);
+  if(mode.nets){ comm(bowlRole?'Nets session. Bowl as many balls as you like.':'Nets session. Face as many balls as you like: try every shot.'); return; }
   comm(bowlRole?`${M.oppText} in ${mode.overs} overs. Defend ${M.target-1}: the Opposition XI need ${M.target} to win.`:`${M.oppText} in ${mode.overs} overs. You need ${M.target} to win.`);
 }
 const curBowler=()=>M.bowlers[M.bi];
@@ -37,6 +39,7 @@ function nextBall(first){
   game.phase=M.role==='bowl'?'aim':'ready'; game.t=first?-.6:0;
   $('meter').hidden=M.role!=='bowl';
   if(M.role==='bowl'){ buildTypeButtons(); game.meter=null; $('meter').hidden=false; $('needle').style.left='0%'; $('meterlbl').textContent='AIM, THEN PRESS BOWL'; updateAimInfo(); }
+  hideLanding(); game.preDel=null; $('tbar').hidden=true; $('shotsel').textContent='';
   input.dir='auto'; input.pressT=null; input.loft=false; input.charge=false; syncDirBtns();
   ball.visible=false; bshadow.visible=false; clearTrail(); trackLine.visible=false;
   resetStumps(stumpsNear); resetStumps(stumpsFar);

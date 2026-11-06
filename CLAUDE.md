@@ -13,6 +13,7 @@ Browser cricket game: Vite + plain ES modules + Three.js 0.169. No framework.
 - Players: each player is a procedural `Rig` (players.js) driven by the `POSE` library. When the Mixamo model loads, `athletes.js` attaches a skinned body to every rig and copies the rig's pose onto the Mixamo skeleton each frame (`retarget`). The rig meshes are then hidden; the bat stays on the rig.
 - Ball flight is precomputed: deliveries in `bowling.js` (`simulateDelivery`), hits in `fielding.js` (`simulateHit`), sampled by time with `pathPos`.
 - Coordinates: metres; striker's stumps at z=0, bowler's stumps at z=-20.12; +x is the off side for the right-handed batter; field centre at z=-10.06.
+- Batting aids live in `assist.js`: pitch marker (delivery is pre-built at run-up start in bat mode, `game.preDel`), held-key eight-way direction (`keyDir`), shot names and the timing bar. Ball speed setting scales `dt` during `runup`/`delivery` in bat mode (`SPEEDS`).
 - `window.__game` is a test hook used by `scripts/smoke.cjs`; keep it.
 
 ## Conventions

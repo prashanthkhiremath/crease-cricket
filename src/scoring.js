@@ -22,7 +22,7 @@ function endBall(o){
     const w=o.wicket; M.wkts++; sym='W'; if(!w.runout) bw.w++;
     M.batters[w.who].out=w.how;
     if(o.runs%2===1){ [M.s,M.ns]=[M.ns,M.s]; }
-    if(M.next<11&&M.wkts<M.mode.wkts){ if(w.who===M.s) M.s=M.next; else M.ns=M.next; M.next++; }
+    if(!M.mode.nets&&M.next<11&&M.wkts<M.mode.wkts){ if(w.who===M.s) M.s=M.next; else M.ns=M.next; M.next++; }
     flash('OUT!',w.type,'fw',2.2); Snd.groan();
   } else {
     if(o.runs%2===1) [M.s,M.ns]=[M.ns,M.s];
@@ -35,7 +35,8 @@ function endBall(o){
   comm(o.text||'');
   // match end?
   const maxB=M.mode.overs*6;
-  if(M.runs>=M.target){ M.done='win'; }
+  if(M.mode.nets){}
+  else if(M.runs>=M.target){ M.done='win'; }
   else if(M.wkts>=M.mode.wkts||M.balls>=maxB){ M.done=M.runs===M.target-1?'tie':'loss'; }
   if(!M.done&&legal&&M.balls%6===0){
     [M.s,M.ns]=[M.ns,M.s]; M.over++; M.resetOver=true;
@@ -47,11 +48,11 @@ function endBall(o){
 function oversStr(b){ return `${Math.floor(b/6)}.${b%6}`; }
 function updateHUD(){
   if(!M) return;
-  $('score').textContent=`${M.runs}/${M.wkts}`; $('overs').textContent=`${oversStr(M.balls)} / ${M.mode.overs}`;
+  $('score').textContent=`${M.runs}/${M.wkts}`; $('overs').textContent=M.mode.nets?oversStr(M.balls):`${oversStr(M.balls)} / ${M.mode.overs}`;
   const need=M.target-M.runs, left=M.mode.overs*6-M.balls;
-  $('chase').innerHTML=need>0?`${M.role==='bowl'?'Opp need':'Need'} <b>${need}</b> from <b>${left}</b> ball${left===1?'':'s'} · Target ${M.target}`:`Target ${M.target} reached`;
+  $('chase').innerHTML=M.mode.nets?`Nets · <b>${M.balls}</b> balls · ${M.wkts} dismissal${M.wkts===1?'':'s'}`:need>0?`${M.role==='bowl'?'Opp need':'Need'} <b>${need}</b> from <b>${left}</b> ball${left===1?'':'s'} · Target ${M.target}`:`Target ${M.target} reached`;
   $('crr').textContent=M.balls?(M.runs/M.balls*6).toFixed(2):'0.00';
-  $('rrr').textContent=left>0&&need>0?(need/left*6).toFixed(2):'–';
+  $('rrr').textContent=M.mode.nets?'–':left>0&&need>0?(need/left*6).toFixed(2):'–';
   const b1=M.batters[M.s], b2=M.batters[M.ns], bw=curBowler();
   $('batcard').innerHTML=`<div class="ln"><span class="nm on">${b1.n} *</span><span>${b1.r} <span class="st">(${b1.b})</span></span></div><div class="ln"><span class="nm">${b2.n}</span><span>${b2.r} <span class="st">(${b2.b})</span></span></div>`;
   $('bowlcard').innerHTML=`<div class="ln"><span class="nm">${bw.name}</span><span class="st">${bw.type==='spin'?(bw.style==='off'?'Off-spin':'Leg-spin'):'Pace'}</span></div><div class="ln"><span class="st">${oversStr(bw.balls)}-${bw.runs}-${bw.w}</span><span class="st">Econ ${bw.balls?(bw.runs/bw.balls*6).toFixed(1):'0.0'}</span></div>`;

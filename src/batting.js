@@ -1,5 +1,6 @@
 // batting.js — generated from the prototype; edit freely.
 import * as THREE from 'three';
+import { SHOT_ANGLE, keyDir, shotName, showTimingBar } from './assist.js';
 import { $, DIFF, clamp, pick, rand } from './config.js';
 import { Snd } from './audio.js';
 import { breakStumps, stumpsNear } from './scene.js';
@@ -14,6 +15,7 @@ import { showDRS, showTiming } from './hud.js';
 function windows(){ const d=game.del, f=(M&&M.role==='bowl'?1:DIFF[game.diff].win)*(input.dir==='block'?1.6:1)*(d.name==='Yorker'?.8:1)*(d.name==='Bouncer'?.9:1); return {P:.038*f,G:.08*f,E:.135*f}; }
 function shot(loft){
   if(game.phase!=='delivery'||input.pressT!==null) return;
+  const kd=keyDir(); if(kd) input.dir=kd;
   input.pressT=game.t; input.loft=loft&&input.dir!=='block';
   game.swingT=0;
 }
@@ -29,12 +31,17 @@ function resolveContact(){
   let cls=ad<=W.P?'perfect':ad<=W.G?'good':'edge';
   const dir=input.dir;
   const down=()=>{cls=cls==='perfect'?'good':'edge';};
-  if((dir==='off'&&q.x<-.25)||(dir==='leg'&&q.x>.5)) down();
+  const spin=d.bowler.type==='spin', shortB=d.len>8.5, fullB=d.len<4.4;
+  if(((dir==='off'||dir==='cut'||dir==='offdrive')&&q.x<-.25)||((dir==='leg'||dir==='glance'||dir==='ondrive')&&q.x>.5)) down();
+  if(dir==='cut'&&fullB) down();
+  if((dir==='straight'||dir==='offdrive'||dir==='ondrive')&&shortB&&!spin) down();
   if(q.x>.6&&cls!=='edge'&&Math.random()<.3) down();
-  if(d.name==='Bouncer'&&dir!=='leg'&&!input.loft&&Math.random()<.4) down();
-  showTiming(cls==='edge'?(diff<0?'EARLY':'LATE'):cls==='perfect'?'PERFECT':diff<0?'GOOD · EARLY':'GOOD · LATE', cls);
+  if(d.name==='Bouncer'&&!['leg','glance','cut'].includes(dir)&&!input.loft&&Math.random()<.4) down();
+  const sname=dir==='auto'?'':shotName(dir,d,input.loft,spin);
+  showTiming((sname?sname.toUpperCase()+' · ':'')+(cls==='edge'?(diff<0?'EARLY':'LATE'):cls==='perfect'?'PERFECT':diff<0?'GOOD · EARLY':'GOOD · LATE'), cls);
+  if(M.role==='bat') showTimingBar(diff,W);
   // direction (theta>0 = off side, 0 = straight back past the bowler)
-  let base={off:55,straight:6,leg:-55,block:0}[dir];
+  let base=SHOT_ANGLE[dir];
   if(dir==='auto') base=q.x>.25?rand(35,60):q.x<-.05?rand(-65,-35):rand(-15,20);
   let theta=base+clamp(diff/W.G,-1.6,1.6)*30+rand(-10,10), phi, sp;
   const ch=input.charge?3:0;
@@ -55,11 +62,11 @@ function resolveContact(){
   const p0=new THREE.Vector3(q.x,Math.max(q.y,.12),d.contactZ);
   game.swingYaw=clamp(-theta*Math.PI/180*.7,-1.2,1.2);
   Snd.bat(cls==='perfect'?1:cls==='good'?.6:.25);
-  startLive(p0,v0,{cls,theta,loft:input.loft,dir});
+  startLive(p0,v0,{cls,theta,loft:input.loft,dir,name:sname});
 }
 function startMiss(offered,diff){
   const d=game.del;
-  if(offered) showTiming(diff<0?'TOO EARLY':'TOO LATE','edge'); else if(input.pressT===null) {}
+  if(offered){ showTiming(diff<0?'TOO EARLY':'TOO LATE','edge'); if(M.role==='bat'&&diff!==undefined) showTimingBar(diff,windows()); } else if(input.pressT===null) {}
   d.miss={offered};
   const pad=d.atPad, stumps=d.atStumps;
   const inPad=pad&&pad.x>striker.position.x-.02&&pad.x<striker.position.x+.5&&pad.y<.7;

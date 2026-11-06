@@ -47,8 +47,15 @@ body{background:#08112a;color:var(--ink);font-family:var(--body);-webkit-user-se
 #flash .big{font-size:clamp(54px,12vw,110px);font-weight:800;line-height:.9;letter-spacing:.02em;text-shadow:0 4px 24px rgba(0,0,0,.5)}
 #flash .sub{font-size:clamp(16px,3.4vw,24px);font-weight:500;letter-spacing:.08em;text-transform:uppercase;margin-top:4px;text-shadow:0 2px 8px rgba(0,0,0,.6)}
 #flash.f4 .big{color:#5aa2ff}#flash.f6 .big{color:#c79bff}#flash.fw .big{color:#ff6b61}#flash.fx .big{color:var(--gold)}
-#timing{position:absolute;left:50%;top:58%;transform:translateX(-50%);font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:.12em;opacity:0;transition:opacity .2s}
+#timing{position:absolute;left:50%;top:58%;transform:translateX(-50%);font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:.12em;opacity:0;transition:opacity .2s;text-shadow:0 2px 10px rgba(0,0,0,.85),0 0 2px rgba(0,0,0,.9);white-space:nowrap}
 #timing.show{opacity:1}
+#tbar{position:absolute;left:50%;top:calc(58% + 34px);transform:translateX(-50%);width:min(300px,70vw);height:10px;border-radius:5px;background:rgba(232,68,58,.75)}
+#tbar .tg{position:absolute;top:0;bottom:0;background:#e0a03a}
+#tbar .tp{position:absolute;top:0;bottom:0;background:#34c777}
+#tbar .tn{position:absolute;top:-5px;bottom:-5px;width:4px;margin-left:-2px;background:#fff;border-radius:2px;box-shadow:0 0 6px rgba(0,0,0,.7)}
+#tbar span{position:absolute;top:14px;font-family:var(--display);font-size:11px;letter-spacing:.16em;color:var(--muted)}
+#tbar .te{left:0}#tbar .tl{right:0}
+#shotsel{position:absolute;left:50%;top:calc(58% - 34px);transform:translateX(-50%);font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);text-shadow:0 2px 8px rgba(0,0,0,.7)}
 #freehit{position:absolute;left:50%;top:calc(max(10px,env(safe-area-inset-top,0px)) + 92px);transform:translateX(-50%);background:var(--red);font-family:var(--display);font-weight:800;letter-spacing:.14em;padding:4px 14px;font-size:18px}
 #drs{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:36%;background:rgba(8,17,42,.92);border:1px solid rgba(255,255,255,.15);font-family:var(--display);min-width:200px}
 #drs h4{margin:0;background:#222c4a;padding:5px 10px;font-size:13px;letter-spacing:.16em;color:var(--muted)}
@@ -73,6 +80,7 @@ body{background:#08112a;color:var(--ink);font-family:var(--body);-webkit-user-se
 .btn.run.hot{animation:pulse .6s infinite alternate}
 @keyframes pulse{to{background:#d9901d;color:var(--navy)}}
 .btn:active{transform:translateY(1px)}
+#quit{position:absolute;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(max(12px,env(safe-area-inset-bottom,0px)) + 170px);pointer-events:auto;min-width:0;padding:6px 9px;font-size:12px}
 #mute{position:absolute;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(max(12px,env(safe-area-inset-bottom,0px)) + 132px);pointer-events:auto;min-width:0;padding:6px 9px;font-size:12px}
 
 /* Screens */
@@ -84,7 +92,10 @@ body{background:#08112a;color:var(--ink);font-family:var(--body);-webkit-user-se
 .brand h1 span{color:var(--gold)}
 .lede{margin:0;color:var(--muted);font-size:16px;line-height:1.5;max-width:60ch}
 .lab{font-family:var(--display);font-size:13px;letter-spacing:.2em;color:var(--muted);margin-bottom:6px}
-.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px}
+.opts.three{grid-template-columns:repeat(3,1fr)}
+.row-opts{display:grid;grid-template-columns:3fr 2fr;gap:14px}
+@media (max-width:560px){.row-opts{grid-template-columns:1fr}}
 .opt{font-family:var(--body);text-align:left;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);color:var(--ink);padding:10px 12px;border-radius:4px;cursor:pointer;display:grid;gap:2px;min-width:0}
 .opt b{font-family:var(--display);font-size:19px;letter-spacing:.04em}
 .opt span{font-size:12.5px;color:var(--muted)}
@@ -122,5 +133,6 @@ td.how{color:var(--muted);font-size:12.5px}
   #speed .kmh{font-size:24px}
   #speed{top:calc(max(10px,env(safe-area-inset-top,0px)) + 148px)}
   #mute{bottom:auto;top:calc(max(10px,env(safe-area-inset-top,0px)) + 206px)}
+  #quit{bottom:auto;top:calc(max(10px,env(safe-area-inset-top,0px)) + 244px)}
 }
 @media (prefers-reduced-motion:reduce){.btn.run.hot{animation:none;background:#d9901d}#flash{transition:none}}

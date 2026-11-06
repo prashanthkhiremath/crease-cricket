@@ -1,5 +1,6 @@
 // bowling.js — generated from the prototype; edit freely.
 import * as THREE from 'three';
+import { showLanding } from './assist.js';
 import { $, BALL_R, DIFF, DTYPES, G, PITCH, clamp, gauss, lengthName, rand, weighted } from './config.js';
 import { ball, clearTrail, signal } from './players.js';
 import { crossZ } from './physics.js';
@@ -67,7 +68,13 @@ function setContactZ(d){
   d.atContact=crossZ(d.path,d.contactZ); d.atPad=crossZ(d.path,d.padZ);
   d.tContact=d.atContact?d.atContact.t:d.tEnd;
 }
-function startRunup(){ game.phase='runup'; game.t=0; }
+function startRunup(){
+  game.phase='runup'; game.t=0;
+  if(M.role==='bat'){
+    game.preDel=buildDelivery(null);
+    if(game.marker) showLanding(game.preDel,{easy:0,normal:.08,hard:.16}[game.diff]);
+  }
+}
 function release(){
   let spec=null;
   if(M.role==='bowl'){
@@ -76,7 +83,7 @@ function release(){
     showTiming(err<.15?'PERFECT RELEASE':err<.45?'GOOD RELEASE':'LOOSE RELEASE',err<.15?'perfect':err<.45?'good':'edge');
     $('meter').hidden=true; aimMarker.visible=false;
   }
-  const d=buildDelivery(spec); game.del=d; setContactZ(d);
+  const d=game.preDel||buildDelivery(spec); game.preDel=null; game.del=d; setContactZ(d);
   if(M.role==='bowl') d.ai=aiPlan(d);
   game.phase='delivery'; game.t=0; d.resolved=false; d.miss=null;
   ball.visible=true; clearTrail();

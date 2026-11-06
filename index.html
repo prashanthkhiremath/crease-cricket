@@ -29,8 +29,11 @@
     <div id="freehit" hidden>FREE HIT</div>
     <div id="flash"><div class="big" id="fbig"></div><div class="sub" id="fsub"></div></div>
     <div id="timing"></div>
+    <div id="tbar" hidden><div class="tg"></div><div class="tp"></div><div class="tn"></div><span class="te">EARLY</span><span class="tl">LATE</span></div>
+    <div id="shotsel"></div>
     <div id="drs" hidden></div>
     <button class="btn" id="mute" type="button">Sound on</button>
+    <button class="btn" id="quit" type="button">Menu</button>
     <div id="bottom" class="pad">
       <div id="meter" hidden><div class="bar"><div id="needle"></div></div><span id="meterlbl">AIM, THEN PRESS BOWL</span></div>
       <div id="comm"></div>
@@ -41,16 +44,16 @@
         </div>
         <div id="batctl">
         <div class="grp">
-          <button class="btn dir" data-dir="off" id="b-off" type="button">◀ Off<kbd>← A</kbd></button>
-          <button class="btn dir" data-dir="straight" id="b-str" type="button">▲ Str<kbd>↑ W</kbd></button>
-          <button class="btn dir" data-dir="leg" id="b-leg" type="button">Leg ▶<kbd>→ D</kbd></button>
-          <button class="btn dir" data-dir="block" id="b-blk" type="button">Block<kbd>↓ S</kbd></button>
+          <button class="btn dir" data-dir="off" id="b-off" type="button">◀ Cover<kbd>hold ←</kbd></button>
+          <button class="btn dir" data-dir="straight" id="b-str" type="button">▲ Straight<kbd>hold ↑</kbd></button>
+          <button class="btn dir" data-dir="leg" id="b-leg" type="button">Leg ▶<kbd>hold →</kbd></button>
+          <button class="btn dir" data-dir="block" id="b-blk" type="button">Defend<kbd>hold ↓</kbd></button>
         </div>
         <div class="grp">
           <button class="btn" id="b-charge" type="button">Step out<kbd>C</kbd></button>
           <button class="btn run" id="b-run" type="button">Run<kbd>R</kbd></button>
           <button class="btn hit" id="b-hit" type="button">Drive<kbd>Space</kbd></button>
-          <button class="btn loft" id="b-loft" type="button">Loft<kbd>L</kbd></button>
+          <button class="btn loft" id="b-loft" type="button">Loft<kbd>Shift</kbd></button>
         </div>
         </div>
       </div>
@@ -74,6 +77,7 @@
           <button class="opt sel" type="button" data-mode="0" id="m0"><b>Quick chase</b><span>2 overs · 3 wickets</span></button>
           <button class="opt" type="button" data-mode="1" id="m1"><b>Powerplay</b><span>5 overs · 5 wickets</span></button>
           <button class="opt" type="button" data-mode="2" id="m2"><b>Full T20</b><span>20 overs · 10 wickets</span></button>
+          <button class="opt" type="button" data-mode="3" id="m3"><b>Nets</b><span>Unlimited balls, no pressure</span></button>
         </div>
       </div>
       <div>
@@ -84,10 +88,27 @@
           <button class="opt" type="button" data-diff="hard" id="d2"><b>International</b><span>Tight timing, sharp fielders</span></button>
         </div>
       </div>
+      <div class="row-opts">
+        <div>
+          <div class="lab">BALL SPEED</div>
+          <div class="opts three" id="speeds">
+            <button class="opt sel" type="button" data-speed="real" id="sp0"><b>Real</b><span>Full pace</span></button>
+            <button class="opt" type="button" data-speed="slower" id="sp1"><b>Slower</b><span>80%</span></button>
+            <button class="opt" type="button" data-speed="learner" id="sp2"><b>Learner</b><span>60%</span></button>
+          </div>
+        </div>
+        <div>
+          <div class="lab">PITCH MARKER</div>
+          <div class="opts two" id="markers">
+            <button class="opt sel" type="button" data-marker="on" id="pm0"><b>On</b><span>Shows the bounce</span></button>
+            <button class="opt" type="button" data-marker="off" id="pm1"><b>Off</b><span>Read it yourself</span></button>
+          </div>
+        </div>
+      </div>
       <div class="help">
-        <b>TIMING</b><span>Press Drive (Space) or Loft (L) as the ball reaches the bat. Watch it pitch.</span>
-        <b>DIRECTION</b><span>Pick Off, Straight or Leg before the shot. Early timing pulls it leg side, late timing runs it fine.</span>
-        <b>BLOCK</b><span>Choose Block, then Drive, to defend a yorker or a jaffa.</span>
+        <b>READ IT</b><span>The blue marker shows where the ball will bounce. Decide your shot while the bowler runs in.</span>
+        <b>SHOT</b><span>Hold a direction and press Space (along the ground) or Shift (lofted) as the ball reaches the bat.</span>
+        <b>DIRECTION</b><span>↑ straight · ← cover · → flick or pull · ↓ defend. Combine: ↑← off drive, ↑→ on drive, ↓← cut, ↓→ glance.</span>
         <b>RUNNING</b><span>Tap Run (R) once per run. Get caught short and you are run out.</span>
         <b>STEP OUT</b><span>Charge the spinners (C) before release. Miss it and the keeper stumps you.</span>
         <b>BOWLING</b><span>Drag on the pitch (or use the arrow keys) to aim, pick a delivery (1–5), press Bowl (Space), then press again with the needle in the green to release.</span>

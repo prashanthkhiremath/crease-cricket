@@ -12,7 +12,9 @@ const MODES = [
   {name:'Quick chase', overs:2, wkts:3, tgt:[19,27]},
   {name:'Powerplay', overs:5, wkts:5, tgt:[46,60]},
   {name:'Full T20', overs:20, wkts:10, tgt:[152,186]},
+  {name:'Nets', overs:99, wkts:99, tgt:[9999,9999], nets:true},
 ];
+const SPEEDS = {real:1, slower:.8, learner:.62};
 const DIFF = {
   easy:{win:1.5, field:0.85, catchM:0.8, label:'Club'},
   normal:{win:1.15, field:1, catchM:1, label:'Domestic'},
@@ -59,4 +61,4 @@ const smooth=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
 function weighted(list){let s=0;for(const it of list)s+=it[1];let r=Math.random()*s;for(const it of list){if((r-=it[1])<=0)return it[0];}return list[0][0];}
 const $=id=>document.getElementById(id);
 
-export { G, BALL_R, PITCH, FC, R_BOUND, K_DRAG, ROLL_DEC, RUNUP, MODES, DIFF, BATTERS, OPP_BATTERS, YOUR_BOWLERS, DTYPES, KIT_YOU, KIT_OPP, gauss, lengthName, lineName, BOWLERS, FIELD_PACE, FIELD_SPIN, rand, pick, clamp, lerp, smooth, weighted, $ };
+export { G, BALL_R, PITCH, FC, R_BOUND, K_DRAG, ROLL_DEC, RUNUP, MODES, DIFF, BATTERS, OPP_BATTERS, YOUR_BOWLERS, DTYPES, KIT_YOU, KIT_OPP, gauss, lengthName, lineName, BOWLERS, FIELD_PACE, FIELD_SPIN, rand, pick, clamp, lerp, smooth, weighted, $, SPEEDS };

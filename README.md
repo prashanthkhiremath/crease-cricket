@@ -22,7 +22,9 @@ Then open the address Vite prints (usually http://localhost:5173).
 
 ## Controls
 
-**Batting:** pick a direction (← off, ↑ straight, → leg, ↓ block), then press Space to drive or L to loft as the ball arrives. R runs, C steps out to spinners. On phones, use the on-screen buttons.
+**Batting:** the blue pitch marker shows where the ball will bounce. Hold a direction and press Space (along the ground) or Shift (lofted) as the ball reaches the bat. Directions: ↑ straight drive, ← cover drive, → flick or pull, ↓ defend; combine them for ↑← off drive, ↑→ on drive, ↓← cut, ↓→ glance. R runs, C steps out to spinners. On phones, use the on-screen buttons.
+
+**Settings:** ball speed (Real, Slower 80%, Learner 60%) and the pitch marker can be changed on the menu. Nets gives unlimited balls for practice.
 
 **Bowling:** drag on the pitch or use the arrow keys to aim, pick a delivery with 1–5, press Space to run in, then press Space again with the needle in the green.
 
