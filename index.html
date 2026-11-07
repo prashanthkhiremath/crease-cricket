@@ -31,6 +31,7 @@
     <div id="timing"></div>
     <div id="tbar" hidden><div class="tg"></div><div class="tp"></div><div class="tn"></div><span class="te">EARLY</span><span class="tl">LATE</span></div>
     <div id="shotsel"></div>
+    <div id="tmeter" hidden><div class="tz"></div><div class="tzp"></div><div class="tn2"></div><span>PRESS IN THE GREEN</span></div>
     <div id="drs" hidden></div>
     <button class="btn" id="mute" type="button">Sound on</button>
     <button class="btn" id="quit" type="button">Menu</button>
@@ -98,6 +99,13 @@
           </div>
         </div>
         <div>
+          <div class="lab">COMMENTARY</div>
+          <div class="opts two" id="voices">
+            <button class="opt sel" type="button" data-voice="on" id="vc0"><b>Voice</b><span>Spoken commentary</span></button>
+            <button class="opt" type="button" data-voice="off" id="vc1"><b>Text</b><span>On screen only</span></button>
+          </div>
+        </div>
+        <div>
           <div class="lab">CAMERA</div>
           <div class="opts two" id="cams">
             <button class="opt sel" type="button" data-cam="close" id="cm0"><b>Close</b><span>Batting view, V to switch</span></button>
@@ -105,16 +113,16 @@
           </div>
         </div>
         <div>
-          <div class="lab">PITCH MARKER</div>
+          <div class="lab">BATTING AIDS</div>
           <div class="opts two" id="markers">
-            <button class="opt sel" type="button" data-marker="on" id="pm0"><b>On</b><span>Shows the bounce</span></button>
+            <button class="opt sel" type="button" data-marker="on" id="pm0"><b>On</b><span>Bounce marker and timing meter</span></button>
             <button class="opt" type="button" data-marker="off" id="pm1"><b>Off</b><span>Read it yourself</span></button>
           </div>
         </div>
       </div>
       <div class="help">
         <b>READ IT</b><span>The blue marker shows where the ball will bounce. Decide your shot while the bowler runs in.</span>
-        <b>SHOT</b><span>Hold a direction and press Space (along the ground) or Shift (lofted) as the ball reaches the bat.</span>
+        <b>SHOT</b><span>Hold a direction and press Space (along the ground) or Shift (lofted) as the ball reaches the bat: when the timing meter's needle is in the green. Not when it bounces.</span>
         <b>DIRECTION</b><span>↑ straight · ← cover · → flick or pull · ↓ defend. Combine: ↑← off drive, ↑→ on drive, ↓← cut, ↓→ glance.</span>
         <b>RUNNING</b><span>Tap Run (R) once per run. Get caught short and you are run out.</span>
         <b>STEP OUT</b><span>Charge the spinners (C) before release. Miss it and the keeper stumps you.</span>

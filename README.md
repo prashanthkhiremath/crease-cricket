@@ -54,7 +54,8 @@ src/
   camera.js         broadcast and follow cameras
   loop.js           main loop and phase machine
   input.js          keyboard and touch input
-  audio.js          synthesised sound effects
+  audio.js          synthesised sound effects and crowd reactions
+  commentary.js     spoken commentary (browser speech synthesis)
 public/models/      player models: players/ (generated squad) and xbot.json (fallback mannequin)
 tools/athletes/     squad generator (MakeHuman/MPFB2 in Blender), see its README
 prototype/          the original single-file version, kept for reference

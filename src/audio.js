@@ -33,6 +33,8 @@ const Snd = {
   bat(p){ this.tone(820,.09,.35*p+.1); this.noise(.06,2400,1.2,.5*p+.15); },
   stumps(){ this.noise(.25,1400,2,.6); this.tone(500,.15,.2,'square'); },
   cheer(l){ this.noise(2.4*l+.6,900,.5,.25*l+.05,.25); this.noise(1.8*l+.4,1800,.7,.12*l,.3); },
+  ooh(){ this.noise(1.1,620,.7,.14,.18); this.noise(.9,1100,.9,.07,.2); },
+  applause(l){ for(let i=0;i<5;i++) setTimeout(()=>this.noise(.5,2400+Math.random()*800,.5,.05*l,.02),i*90); },
   groan(){ this.noise(1.2,400,.8,.18,.2); },
 };
 

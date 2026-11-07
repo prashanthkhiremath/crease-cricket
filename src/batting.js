@@ -13,7 +13,15 @@ import { endBall } from './scoring.js';
 import { showDRS, showTiming } from './hud.js';
 
 // ================= batting =================
-function windows(){ const d=game.del, f=(M&&M.role==='bowl'?1:DIFF[game.diff].win)*(input.dir==='block'?1.6:1)*(d.name==='Yorker'?.8:1)*(d.name==='Bouncer'?.9:1); return {P:.038*f,G:.08*f,E:.135*f}; }
+// Timing windows (seconds either side of the moment the ball reaches the bat).
+// When you bat they are generous, like console cricket; the computer batter in bowl mode keeps the tight ones.
+function windows(){
+  const d=game.del, you=!(M&&M.role==='bowl');
+  const f=(you?DIFF[game.diff].win:1)*(input.dir==='block'?1.4:1)*(d.name==='Yorker'?.85:1)*(d.name==='Bouncer'?.92:1);
+  return you?{P:.055*f,G:.12*f,E:.24*f}:{P:.038*f,G:.08*f,E:.135*f};
+}
+// Timing assist: on easier levels an off-timed press is pulled towards the ball
+const ASSIST={easy:.5,normal:.75,hard:1};
 function shot(loft){
   if(game.phase!=='delivery'||input.pressT!==null) return;
   const kd=keyDir(); if(kd) input.dir=kd;
@@ -30,7 +38,7 @@ function resolveContact(){
   const d=game.del; d.resolved=true;
   const W=windows(), q=d.atContact;
   if(input.pressT===null||!q){ return startMiss(false); }
-  const diff=input.pressT-d.tContact, ad=Math.abs(diff);
+  const raw=input.pressT-d.tContact, diff=M.role==='bat'?raw*ASSIST[game.diff]:raw, ad=Math.abs(diff);
   const batX=striker.position.x+.3;
   const reachable=q.y<1.85 && q.x>batX-.6 && q.x<batX+1.15;
   if(!reachable||ad>W.E) return startMiss(true, diff);
@@ -72,7 +80,7 @@ function resolveContact(){
 }
 function startMiss(offered,diff){
   const d=game.del;
-  if(offered){ showTiming(diff<0?'TOO EARLY':'TOO LATE','edge'); if(M.role==='bat'&&diff!==undefined) showTimingBar(diff,windows()); } else if(input.pressT===null) {}
+  if(offered){ Snd.ooh(); showTiming(diff<0?'TOO EARLY':'TOO LATE','edge'); if(M.role==='bat'&&diff!==undefined) showTimingBar(diff,windows()); } else if(input.pressT===null) {}
   d.miss={offered};
   const pad=d.atPad, stumps=d.atStumps;
   const inPad=pad&&pad.x>striker.position.x-.02&&pad.x<striker.position.x+.5&&pad.y<.7;

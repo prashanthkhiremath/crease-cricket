@@ -72,4 +72,18 @@ function showTimingBar(diff, W) {
   el.hidden = false; clearTimeout(tbTO); tbTO = setTimeout(() => { el.hidden = true; }, 2200);
 }
 
-export { SHOT_ANGLE, keyDir, trackKey, shotName, showLanding, updateLanding, hideLanding, showTimingBar };
+// ---- timing meter: the needle reaches the centre of the green exactly when the ball reaches the bat
+function updateMeter(game, M, W) {
+  const el = $('tmeter'); if (!el) return;
+  const d = game.del, on = game.marker && M && M.role === 'bat' && game.phase === 'delivery' && d && !d.resolved;
+  if (!on) { if (!el.hidden && (!d || game.phase !== 'delivery' || d.resolved)) { el.dataset.off = (+(el.dataset.off || 0) + 1); if (+el.dataset.off > 30) el.hidden = true; } return; }
+  el.dataset.off = 0;
+  const span = d.tContact + W.E;                 // bar covers release .. last chance to hit
+  const at = v => clamp(v / span, 0, 1) * 100;
+  el.querySelector('.tz').style.cssText = `left:${at(d.tContact - W.G)}%;width:${at(d.tContact + W.G) - at(d.tContact - W.G)}%`;
+  el.querySelector('.tzp').style.cssText = `left:${at(d.tContact - W.P)}%;width:${at(d.tContact + W.P) - at(d.tContact - W.P)}%`;
+  el.querySelector('.tn2').style.left = at(game.t) + '%';
+  el.hidden = false;
+}
+
+export { updateMeter, SHOT_ANGLE, keyDir, trackKey, shotName, showLanding, updateLanding, hideLanding, showTimingBar };

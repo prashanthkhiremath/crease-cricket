@@ -16,6 +16,8 @@ Browser cricket game: Vite + plain ES modules + Three.js 0.169. No framework.
 - Coordinates: metres; striker's stumps at z=0, bowler's stumps at z=-20.12; +x is the off side for the right-handed batter; field centre at z=-10.06.
 - Batting: `batgear.js` builds the bat, batting gloves (mounted on the bat handle; the batter's arm IK targets the glove cuffs and the model's own hands are hidden) and the helmet. `strokes.js` defines each stroke as backlift → contact → follow-through bat key poses plus footwork (`POSE.bat`); `shot()` picks the stroke (`chooseStroke`) and times the downswing so the bat meets the ball at `game.swingC`. `game.debugStroke = {kind, t, yaw}` freezes the batter in a stroke pose for screenshots.
 - Camera (`camera.js`): `game.camMode` 'close' (default batting view) or 'broadcast'; holds the batting view for 0.45 s after contact, then cuts to a high chase camera behind the ball.
+- Timing: `windows()` in batting.js gives P/G/E windows (generous when you bat, tight for the computer batter); `ASSIST` pulls an off-timed press towards the ball on Club/Domestic. `assist.js` `updateMeter` draws the timing meter.
+- Commentary: `commentary.js` speaks lines with the browser's speechSynthesis; `comm(text, priority)` in hud.js shows and speaks (2 = ball result, cuts in; 0 = filler, skipped if busy).
 - Batting aids live in `assist.js`: pitch marker (delivery is pre-built at run-up start in bat mode, `game.preDel`), held-key eight-way direction (`keyDir`), shot names and the timing bar. Ball speed setting scales `dt` during `runup`/`delivery` in bat mode (`SPEEDS`).
 - `window.__game` is a test hook used by `scripts/smoke.cjs`; keep it.
 

@@ -1,6 +1,7 @@
 // bowling.js — generated from the prototype; edit freely.
 import * as THREE from 'three';
 import { showLanding } from './assist.js';
+import { say, runupLine } from './commentary.js';
 import { $, BALL_R, DIFF, DTYPES, G, PITCH, clamp, gauss, lengthName, rand, weighted } from './config.js';
 import { ball, clearTrail, signal } from './players.js';
 import { crossZ } from './physics.js';
@@ -70,6 +71,7 @@ function setContactZ(d){
 }
 function startRunup(){
   game.phase='runup'; game.t=0;
+  say(runupLine(curBowler(),M),0);
   if(M.role==='bat'){
     game.preDel=buildDelivery(null);
     if(game.marker) showLanding(game.preDel,{easy:0,normal:.08,hard:.16}[game.diff]);

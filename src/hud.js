@@ -1,4 +1,5 @@
 // hud.js — generated from the prototype; edit freely.
+import { say } from './commentary.js';
 import * as THREE from 'three';
 import { $, DIFF } from './config.js';
 import { Snd } from './audio.js';
@@ -10,7 +11,7 @@ import { oversStr } from './scoring.js';
 let flashTO=null, timingTO=null;
 function flash(big,sub,cls,dur){ const f=$('flash'); f.className='show '+cls; $('fbig').textContent=big; $('fsub').textContent=sub; clearTimeout(flashTO); flashTO=setTimeout(()=>f.className='',dur*1000); }
 function showTiming(txt,cls){ const e=$('timing'); e.textContent=txt; e.style.color=cls==='perfect'?'#34c777':cls==='good'?'#ffc23d':'#ff6b61'; e.classList.add('show'); clearTimeout(timingTO); timingTO=setTimeout(()=>e.classList.remove('show'),2000); }
-function comm(t){ $('comm').textContent=t; }
+function comm(t,pri=1){ $('comm').textContent=t; say(String(t).replace(/\([^)]*\)/g,''),pri); }
 function showDRS(outsideLeg,impact,hitting,out){
   const e=$('drs'); e.hidden=false;
   e.innerHTML=`<h4>BALL TRACKING</h4><div class="r"><span>Pitching</span><span class="${outsideLeg?'no':'ok'}">${outsideLeg?'Outside leg':'In line'}</span></div><div class="r"><span>Impact</span><span class="${impact==='In line'?'ok':'no'}">${impact}</span></div><div class="r"><span>Wickets</span><span class="${hitting?'ok':'no'}">${hitting?'Hitting':'Missing'}</span></div><div class="dec" style="color:${out?'#ff6b61':'#34c777'}">${out?'OUT':'NOT OUT'}</div>`;

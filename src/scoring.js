@@ -28,11 +28,12 @@ function endBall(o){
     if(o.runs%2===1) [M.s,M.ns]=[M.ns,M.s];
     if(o.boundary===6){flash('SIX','Maximum','f6',2); Snd.cheer(1);} else if(o.boundary===4){flash('FOUR','Boundary','f4',2); Snd.cheer(.7);}
     else if(wide) flash('WIDE','+1','fx',1.2);
+    else if(o.runs>0) Snd.applause(Math.min(1,.4+o.runs*.2));
   }
   signal(o.wicket?'out':o.boundary===6?'six':o.boundary===4?'four':wide?'wide':null);
   M.overLog.push(sym);
   M.freeHit=nb?true:(wide?M.freeHit:false);
-  comm(o.text||'');
+  comm(o.text||'',2);
   // match end?
   const maxB=M.mode.overs*6;
   if(M.mode.nets){}

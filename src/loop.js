@@ -1,11 +1,11 @@
 // loop.js — main loop and phase machine.
 import { $, PITCH, RUNUP, SPEEDS, lerp } from './config.js';
-import { updateLanding } from './assist.js';
+import { updateLanding, updateMeter } from './assist.js';
 import { camera, renderer, scene, updateStumps } from './scene.js';
 import { bowler, striker } from './players.js';
 import { M, game, input, nextBall, setField } from './match.js';
 import { release, setContactZ, startRunup } from './bowling.js';
-import { updateDelivery } from './batting.js';
+import { updateDelivery, windows } from './batting.js';
 import { updateLive } from './fielding.js';
 import { updateHUD } from './scoring.js';
 import { showResult } from './hud.js';
@@ -53,6 +53,7 @@ function step(dt){
   // charge (step out)
   if(input.charge&&game.phase!=='live'){ striker.position.z=Math.max(-2.75,striker.position.z-dt*5); if(game.phase==='delivery'&&!game.del.chargeSet){ game.del.chargeSet=true; setContactZ(game.del);} }
   updateLanding(game.phase,game.t);
+  if(game.del&&M) updateMeter(game,M,windows());
   animatePlayers(dt);
   updateCamera(dt);
 }

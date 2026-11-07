@@ -1,4 +1,5 @@
 // fielding.js — generated from the prototype; edit freely.
+import { say } from './commentary.js';
 import * as THREE from 'three';
 import { $, BALL_R, DIFF, FC, G, K_DRAG, PITCH, ROLL_DEC, R_BOUND, clamp, lerp, pick } from './config.js';
 import { Snd } from './audio.js';
@@ -82,6 +83,7 @@ function runnerPos(which,L){ // which 0 = original striker, 1 = non-striker; u i
   const zA=-1.3, zB=-PITCH+1.3, z=u<=1?lerp(zA,zB,u):lerp(zB,zA,u-1);
   return {z, x:which?-1.2:.9, moving:L.inProg};
 }
+function comm0(t){ $('comm').textContent=t; say(t,0); }
 function updateLive(dt){
   const L=game.live; L.t+=dt; const t=L.t;
   if(M.role==='bowl'&&!L.ended&&!L.inProg&&!L.caught&&L.boundaryT===undefined&&L.tRet!==undefined&&L.runs<3&&t>.12){
@@ -90,7 +92,7 @@ function updateLive(dt){
     if(t+dur+margin<L.tRet) callRun();
   }
   // running
-  if(L.inProg&&t-L.rs>=L.rd){ L.inProg=false; L.runs++; if(!L.ended) comm(L.runs===1?'They scamper through for one.':L.runs===2?'Back for the second.':'And they run three!'); }
+  if(L.inProg&&t-L.rs>=L.rd){ L.inProg=false; L.runs++; if(!L.ended) comm0(L.runs===1?'They scamper through for one.':L.runs===2?'Back for the second.':'And they run three!'); }
   for(const [w,p] of [[0,striker],[1,nonStriker]]){
     if(L.runs===0&&!L.inProg&&w===0) continue;
     const r=runnerPos(w,L), dz=r.z-p.position.z;
