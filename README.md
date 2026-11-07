@@ -24,6 +24,8 @@ Then open the address Vite prints (usually http://localhost:5173).
 
 **Batting:** the blue pitch marker shows where the ball will bounce. Hold a direction and press Space (along the ground) or Shift (lofted) as the ball reaches the bat. Directions: ↑ straight drive, ← cover drive, → flick or pull, ↓ defend; combine them for ↑← off drive, ↑→ on drive, ↓← cut, ↓→ glance. R runs, C steps out to spinners. On phones, use the on-screen buttons.
 
+**Camera:** Close (batting view, default) or Broadcast; press V to switch during play.
+
 **Settings:** ball speed (Real, Slower 80%, Learner 60%) and the pitch marker can be changed on the menu. Nets gives unlimited balls for practice.
 
 **Bowling:** drag on the pitch or use the arrow keys to aim, pick a delivery with 1–5, press Space to run in, then press Space again with the needle in the green.
@@ -38,6 +40,8 @@ src/
   scene.js          renderer, lighting, stadium, pitch, stumps
   players.js        procedural pose rigs, pose library, bat, ball and trail
   athletes.js       skinned 3D players, kit colours, retargeting from the pose rigs
+  batgear.js        bat, batting gloves and helmet
+  strokes.js        batting stroke key poses (drive, loft, cut, pull, flick, sweep, defence)
   animation.js      chooses each player's pose every frame
   physics.js        path sampling helpers
   bowling.js        delivery generation and ball flight to the batter

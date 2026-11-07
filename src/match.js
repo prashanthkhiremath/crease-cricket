@@ -10,7 +10,7 @@ import { hideLanding } from './assist.js';
 import { applyKits, buildTypeButtons, updateAimInfo } from './bowlmode.js';
 
 // ================= game state =================
-const game={phase:'menu',t:0,mode:MODES[0],modeIdx:0,diff:'normal',role:'bat',speed:'real',marker:true,preDel:null,aim:{x:.18,len:6.2},dti:0,meter:null};
+const game={phase:'menu',t:0,mode:MODES[0],modeIdx:0,diff:'normal',role:'bat',camMode:'close',shake:0,speed:'real',marker:true,preDel:null,aim:{x:.18,len:6.2},dti:0,meter:null};
 let M=null;
  // match
 const input={dir:'auto',pressT:null,loft:false,charge:false};
@@ -40,6 +40,7 @@ function nextBall(first){
   $('meter').hidden=M.role!=='bowl';
   if(M.role==='bowl'){ buildTypeButtons(); game.meter=null; $('meter').hidden=false; $('needle').style.left='0%'; $('meterlbl').textContent='AIM, THEN PRESS BOWL'; updateAimInfo(); }
   hideLanding(); game.preDel=null; $('tbar').hidden=true; $('shotsel').textContent='';
+  game.stroke=null;
   input.dir='auto'; input.pressT=null; input.loft=false; input.charge=false; syncDirBtns();
   ball.visible=false; bshadow.visible=false; clearTrail(); trackLine.visible=false;
   resetStumps(stumpsNear); resetStumps(stumpsFar);

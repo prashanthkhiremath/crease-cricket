@@ -13,7 +13,7 @@ import './bowlmode.js';
 
 function resize(){
   const w=window.innerWidth, h=window.innerHeight;
-  renderer.setSize(w,h,false); camera.aspect=w/h; camera.fov=w/h<1?20:12.5; camera.updateProjectionMatrix();
+  renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix();
 }
 window.addEventListener('resize',resize);
 resize();

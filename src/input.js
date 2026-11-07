@@ -22,6 +22,7 @@ $('mute').addEventListener('click',()=>{ Snd.init(); Snd.on=!Snd.on; $('mute').t
 window.addEventListener('keydown',e=>{
   if(game.phase==='menu'||game.phase==='result'){ if(e.key==='Enter'&&document.activeElement.tagName!=='BUTTON'){ Snd.init(); newMatch(); } return; }
   const k=e.key.toLowerCase(); let used=true;
+  if(k==='v'){ game.camMode=game.camMode==='broadcast'?'close':'broadcast'; document.querySelectorAll('#cams .opt').forEach(x=>x.classList.toggle('sel',x.dataset.cam===game.camMode)); e.preventDefault(); return; }
   if(M&&M.role==='bowl'){
     if(k==='arrowleft'||k==='a') nudgeAim(.06,0); else if(k==='arrowright'||k==='d') nudgeAim(-.06,0);
     else if(k==='arrowup'||k==='w') nudgeAim(0,-.3); else if(k==='arrowdown'||k==='s') nudgeAim(0,.3);
@@ -37,6 +38,7 @@ document.querySelectorAll('#roles .opt').forEach(b=>b.addEventListener('click',(
 press('b-bowl',()=>bowlPress());
 document.querySelectorAll('#modes .opt').forEach(b=>b.addEventListener('click',()=>{ game.modeIdx=+b.dataset.mode; document.querySelectorAll('#modes .opt').forEach(x=>x.classList.toggle('sel',x===b)); }));
 document.querySelectorAll('#speeds .opt').forEach(b=>b.addEventListener('click',()=>{ game.speed=b.dataset.speed; document.querySelectorAll('#speeds .opt').forEach(x=>x.classList.toggle('sel',x===b)); }));
+document.querySelectorAll('#cams .opt').forEach(b=>b.addEventListener('click',()=>{ game.camMode=b.dataset.cam; document.querySelectorAll('#cams .opt').forEach(x=>x.classList.toggle('sel',x===b)); }));
 document.querySelectorAll('#markers .opt').forEach(b=>b.addEventListener('click',()=>{ game.marker=b.dataset.marker==='on'; document.querySelectorAll('#markers .opt').forEach(x=>x.classList.toggle('sel',x===b)); }));
 document.querySelectorAll('#diffs .opt').forEach(b=>b.addEventListener('click',()=>{ game.diff=b.dataset.diff; document.querySelectorAll('#diffs .opt').forEach(x=>x.classList.toggle('sel',x===b)); }));
 $('play').addEventListener('click',()=>{ Snd.init(); newMatch(); });

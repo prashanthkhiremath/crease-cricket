@@ -4,6 +4,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { clamp } from './config.js';
 import { canvasTex, mat } from './scene.js';
+import { buildHelmet } from './batgear.js';
 import { BR, NR, POLE_L, POLE_R, SR, _tA, _tB, _v1, _v2, fielders, umpire, umpire2 } from './players.js';
 import { applyKits } from './bowlmode.js';
 
@@ -88,21 +89,18 @@ function attachAthlete(r,src,roster){
   // measure this model in its rest pose so kit pieces fit any head and body size
   const H=B.Head; let capMat=null;
   const hb=H.getWorldPosition(new THREE.Vector3()), v=new THREE.Vector3();
-  let headTop=-1, hx=0, hz=0, hn=0, backZ=1e9; const chestY=B.Spine2.getWorldPosition(new THREE.Vector3()).y;
+  let headTop=-1, hx=0, hz=0, hn=0, backZ=1e9, minX=1e9, maxX=-1e9, minZ=1e9, maxZ=-1e9; const chestY=B.Spine2.getWorldPosition(new THREE.Vector3()).y;
   sc.traverse(n=>{ if(!n.isSkinnedMesh) return; const pa=n.geometry.attributes.position, nm=(n.name+' '+(n.parent?n.parent.name:'')).toLowerCase();
     for(let i=0;i<pa.count;i+=3){ v.fromBufferAttribute(pa,i); n.applyBoneTransform(i,v); v.applyMatrix4(n.matrixWorld);
       if(v.y>headTop) headTop=v.y;
-      if(v.y>hb.y+.04){ hx+=v.x; hz+=v.z; hn++; }
+      if(v.y>hb.y+.04){ hx+=v.x; hz+=v.z; hn++; if(v.y>hb.y+.07){ minX=Math.min(minX,v.x); maxX=Math.max(maxX,v.x); minZ=Math.min(minZ,v.z); maxZ=Math.max(maxZ,v.z); } }
       if((nm.includes('shirt')||!roster)&&Math.abs(v.y-chestY)<.06&&Math.abs(v.x)<.06&&v.z<backZ) backZ=v.z; } });
   const headC=new THREE.Vector3(hn?hx/hn-hb.x:0,0,hn?hz/hn-hb.z:0);
   const fitY=(below)=>headTop-below-hb.y;
-  if(o.helmet){ const g=new THREE.Group(), hm=mat(o.helmet,{roughness:.35,metalness:.1}), gr=mat(0xb8bcc4,{metalness:.8,roughness:.3});
-    const dome=new THREE.Mesh(new THREE.SphereGeometry(.128,20,14,0,Math.PI*2,0,Math.PI*.56),hm); dome.scale.set(1,1.02,1.12); g.add(dome);
-    const peak=new THREE.Mesh(new THREE.BoxGeometry(.2,.014,.08),hm); peak.position.set(0,.02,.15); peak.rotation.x=.18; g.add(peak);
-    const gb=roster?[[-.05,.106],[-.092,.096]]:[[-.03,.118],[-.07,.118],[-.11,.118]];
-    for(const [gy,rr] of gb){ const t=new THREE.Mesh(new THREE.TorusGeometry(rr,.005,6,18,Math.PI),gr); t.rotation.x=Math.PI/2; t.position.set(0,gy,.012); t.scale.set(.95,1.22,1); g.add(t); }
-    const bar=new THREE.Mesh(new THREE.BoxGeometry(.01,roster?.06:.1,.01),gr); bar.position.set(0,roster?-.07:-.07,roster?.13:.165); g.add(bar);
-    attachAt(H,g,sc,new THREE.Vector3(headC.x,fitY(.085),headC.z+.005)); }
+  if(o.helmet){
+    const hr=hn?Math.max((maxX-minX)/2,(maxZ-minZ)/2*.9)+.016:.128;
+    const g=buildHelmet({r:hr},o.helmet);
+    attachAt(H,g,sc,new THREE.Vector3(headC.x,headTop-hr*.93-hb.y,headC.z+.008)); }
   else if(o.cap){ const g=new THREE.Group(), cm=mat(o.cap,{roughness:.7}); capMat=cm;
     const cr=roster?.098:.112;
     const d=new THREE.Mesh(new THREE.SphereGeometry(cr,18,10,0,Math.PI*2,0,Math.PI*.5),cm); d.scale.set(1,.82,1.1); g.add(d);
@@ -118,7 +116,8 @@ function attachAthlete(r,src,roster){
       const knee=new THREE.Mesh(new THREE.BoxGeometry(.17,.13,.11),pm); knee.position.set(0,.27,.01); g.add(knee);
       attachAt(B[s+'Leg'],g,sc,new THREE.Vector3(0,-.21,.075)); }
   }
-  if(o.gloves){ const gm=mat(o.gloves,{roughness:.6});
+  if(r.bat){ B.LeftHand.scale.setScalar(.001); B.RightHand.scale.setScalar(.001); }   // batting gloves live on the bat handle
+  else if(o.gloves){ const gm=mat(o.gloves,{roughness:.6});
     for(const s of ['Left','Right']){ const g=new THREE.Mesh(new THREE.BoxGeometry(.13,.06,.1),gm); attachAt(B[s+'Hand'],g,sc,new THREE.Vector3(s==='Left'?.06:-.06,0,0)); } }
   if(o.num!==''&&o.num!==undefined){ const d=numberDecal(o.num,o.trim||'#ffffff'); attachAt(B.Spine2,d,sc,new THREE.Vector3(0,.03,(backZ<1e8?backZ-.006:-.135)-B.Spine2.getWorldPosition(new THREE.Vector3()).z),Math.PI); }
   // fit the pose rig to this model's proportions (rest pose, model space)
@@ -146,8 +145,8 @@ let _restLookup=null;
  function restDirBase(b){ return b.userData.restQ; }
 function copyOrient(b,restWQ,drv){ drv.getWorldQuaternion(_wq1).multiply(restWQ); b.parent.getWorldQuaternion(_wq2); b.quaternion.copy(_wq2.invert().multiply(_wq1)); }
 const _hand=new THREE.Vector3(), _pole=new THREE.Vector3(), _elb=new THREE.Vector3(), _tgt=new THREE.Vector3();
-function ikSkin(S,side,target,poleW){
-  const up=S.B[side+'Arm'], fo=S.B[side+'ForeArm'], L1=S.len[side+'Arm'], L2=S.len[side+'ForeArm']+.06;
+function ikSkin(S,side,target,poleW,ext=.06){
+  const up=S.B[side+'Arm'], fo=S.B[side+'ForeArm'], L1=S.len[side+'Arm'], L2=S.len[side+'ForeArm']+ext;
   const s=up.getWorldPosition(_w3).clone(); const d=_tgt.copy(target).sub(s); const len=clamp(d.length(),.06,L1+L2-.002); d.setLength(len);
   const A=Math.acos(clamp((L1*L1+len*len-L2*L2)/(2*L1*len),-1,1));
   const n=_pole.copy(d).cross(poleW).normalize(); const ud=_elb.copy(d).normalize().applyAxisAngle(n,A);
@@ -171,8 +170,9 @@ function retarget(r){
   if(r.bat){
     J.chest.getWorldQuaternion(_wq1);
     const pl=_v1.copy(POLE_L).applyQuaternion(_wq1), pr=_v2.copy(POLE_R).applyQuaternion(_wq1);
-    ikSkin(S,'Right',r.bat.gBot.getWorldPosition(_tA),pr);
-    if(!r.oneHand) ikSkin(S,'Left',r.bat.gTop.getWorldPosition(_tB),pl); else { aimBone(B.LeftArm,R.LeftArm.dir,J.lFore.getWorldPosition(_w3)); aimBone(B.LeftForeArm,R.LeftForeArm.dir,J.lHand.getWorldPosition(_w3)); }
+    ikSkin(S,'Right',r.bat.gBot.getWorldPosition(_tA),pr,0);
+    const one=!!r.oneHand; r.bat.gloveTop.visible=!one; B.LeftHand.scale.setScalar(one?1:.001);
+    if(!one) ikSkin(S,'Left',r.bat.gTop.getWorldPosition(_tB),pl,0); else { aimBone(B.LeftArm,R.LeftArm.dir,J.lFore.getWorldPosition(_w3)); aimBone(B.LeftForeArm,R.LeftForeArm.dir,J.lHand.getWorldPosition(_w3)); }
   } else {
     for(const [s,d] of [['Left','l'],['Right','r']]){
       aimBone(B[s+'Arm'],R[s+'Arm'].dir,J[d+'Fore'].getWorldPosition(_w3));

@@ -1,5 +1,6 @@
 // players.js — generated from the prototype; edit freely.
 import * as THREE from 'three';
+import { buildBat, buildGlove, GRIP_TOP, GRIP_BOT } from './batgear.js';
 import { FIELD_PACE, PITCH, clamp, lerp, pick, smooth } from './config.js';
 import { canvasTex, mat, scene } from './scene.js';
 
@@ -144,7 +145,11 @@ const POSE={
     const S={spine:[.32,0,0],chest:[0,-.15,0],neck:[0,1.1,0],head:[-.05,.2,0],lThigh:[-.2,0,.22],rThigh:[-.15,0,-.2],lShin:[.42,0,0],rShin:[.36,0,0],lFoot:[-.2,-.4,0],rFoot:[-.2,-.3,0],hipsR:[0,-.1,0]};
     if(kind==='stance') return S;
     if(kind==='trigger') return Object.assign({},S,{lThigh:[-.25,0,.3],rThigh:[-.2,0,-.24],lShin:[.5,0,0],rShin:[.45,0,0],spine:[.36,0,0]});
-    if(kind==='front') { const k=smooth(u); return Object.assign({},S,{spine:[.32+.2*k,0,-.15*k],chest:[0,-.15-.25*k,0],lThigh:[-.25-.15*k,0,.22+.55*k],lShin:[.42+.15*k,0,0],rThigh:[-.1,0,-.2-.2*k],rShin:[.36+.45*k,0,0],rFoot:[.3*k,-.3,0],neck:[0,1.1-.2*k,0]}); }
+    if(kind==='front') { const k=smooth(u); return Object.assign({},S,{spine:[.32+.26*k,0,-.2*k],chest:[0,-.15-.3*k,0],lThigh:[-.25-.28*k,0,.22+.62*k],lShin:[.42+.32*k,0,0],lFoot:[-.2-.25*k,-.4,0],rThigh:[-.1,0,-.2-.26*k],rShin:[.36+.55*k,0,0],rFoot:[.45*k,-.3,0],neck:[0,1.1-.15*k,0],head:[-.05-.12*k,.2,0]}); }
+    if(kind==='backdef') { const k=smooth(u); return Object.assign({},S,{spine:[.22,0,.06*k],chest:[0,-.12,0],lThigh:[-.08,0,.14],lShin:[.25,0,0],rThigh:[-.22*k,0,-.22-.22*k],rShin:[.3,0,0],neck:[0,1.05,0],head:[-.12*k,.2,0],hipsR:[0,-.1,0]}); }
+    if(kind==='cut') { const k=smooth(u); return Object.assign({},S,{spine:[.38,0,.1*k],chest:[0,-.15-.28*k,0],lThigh:[-.06,0,.14],lShin:[.3,0,0],rThigh:[-.42*k,0,-.24-.2*k],rShin:[.42,0,0],rFoot:[-.2,-.3-.4*k,0],neck:[0,1.05,0],head:[-.1*k,.2,0]}); }
+    if(kind==='pull') { const k=smooth(u); return Object.assign({},S,{spine:[.16,0,.12*k],chest:[0,-.15+.65*k,0],lThigh:[-.05,0,.15+.25*k],lShin:[.25,0,0],rThigh:[-.12*k,0,-.36*k],rShin:[.3,0,0],neck:[0,1.0-.55*k,0],hipsR:[0,-.1+.65*k,0]}); }
+    if(kind==='sweep') { const k=smooth(u); return Object.assign({},S,{spine:[.32+.38*k,0,-.12*k],chest:[0,-.15-.2*k,0],lThigh:[-.22-1.1*k,0,.22+.25*k],lShin:[.42+1.25*k,0,0],lFoot:[-.2,-.4,0],rThigh:[.32*k,0,-.2-.12*k],rShin:[.36+1.55*k,0,0],rFoot:[.4*k,-.3,0],neck:[0,1.05,0],head:[-.18*k,.2,0]}); }
     if(kind==='back') { const k=smooth(u); return Object.assign({},S,{spine:[.15,0,.12*k],chest:[0,-.15+.6*k,0],lThigh:[-.05,0,.15],lShin:[.2,0,0],rThigh:[-.1,0,-.45*k],rShin:[.25,0,0],neck:[0,1.0-.5*k,0],hipsR:[0,-.1+.5*k,0]}); }
     if(kind==='charge') return Object.assign({},S,{lThigh:[-.4,0,.45],rThigh:[.1,0,-.1],lShin:[.6,0,0],rShin:[.8,0,0]});
     return S;
@@ -156,17 +161,13 @@ function makeBatter(){
   const yaw=new THREE.Group(); yaw.position.set(-.02,1.18,.3); r.root.add(yaw);
   const sw=new THREE.Group(); yaw.add(sw);
   const wrist=new THREE.Group(); wrist.position.set(0,-.42,0); sw.add(wrist);
-  const willow=mat(0xe6cf98,{roughness:.55}), grip=mat(0x1b3b2a,{roughness:.8});
-  const handle=new THREE.Mesh(new THREE.CylinderGeometry(.017,.017,.3,8),grip); handle.position.y=-.01; wrist.add(handle);
-  const blade=new THREE.Mesh(new THREE.BoxGeometry(.045,.56,.108),willow); blade.position.y=-.44; blade.castShadow=true; wrist.add(blade);
-  const spineB=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.46,8,1,false,0,Math.PI),willow); spineB.rotation.z=0; spineB.position.set(-.02,-.42,0); spineB.rotation.y=Math.PI/2; spineB.scale.set(1,1,.9); wrist.add(spineB);
-  const sticker=new THREE.Mesh(new THREE.BoxGeometry(.046,.12,.09),mat(0x1f4fa8)); sticker.position.y=-.27; wrist.add(sticker);
-  const gTop=new THREE.Object3D(); gTop.position.y=.09; wrist.add(gTop);
-  const gBot=new THREE.Object3D(); gBot.position.y=-.03; wrist.add(gBot);
-  r.bat={yaw,sw,wrist,gTop,gBot,a:-.2,w:-.4,tilt:0,yawv:0};
+  buildBat(wrist);
+  const top=buildGlove(wrist,GRIP_TOP,0x16295a), bot=buildGlove(wrist,GRIP_BOT,0x16295a);
+  // IK targets are the gloves' cuffs, so the hands always stay on the handle
+  r.bat={yaw,sw,wrist,gTop:top.anchor,gBot:bot.anchor,gloveTop:top.glove,gloveBot:bot.glove,a:-.2,w:-.4,tilt:0,yawv:0,piv:1.18};
   return r;
 }
-function setBatAngles(r,a,w,yaw,tilt,k=1){ const b=r.bat; b.a+=(a-b.a)*k; b.w+=(w-b.w)*k; b.yawv+=(yaw-b.yawv)*k; b.tilt+=((tilt||0)-b.tilt)*k; b.sw.rotation.z=b.a; b.wrist.rotation.z=b.w; b.yaw.rotation.y=b.yawv; b.yaw.rotation.x=b.tilt; }
+function setBatAngles(r,a,w,yaw,tilt,k=1,piv=1.18){ const b=r.bat; b.a+=(a-b.a)*k; b.w+=(w-b.w)*k; b.yawv+=(yaw-b.yawv)*k; b.tilt+=((tilt||0)-b.tilt)*k; b.piv+=(piv-b.piv)*k; b.sw.rotation.z=b.a; b.wrist.rotation.z=b.w; b.yaw.rotation.y=b.yawv; b.yaw.rotation.x=b.tilt; b.yaw.position.y=b.piv; }
 const POLE_L=new THREE.Vector3(1,-.6,.4), POLE_R=new THREE.Vector3(-.4,-1,.3), POLE_RUN=new THREE.Vector3(0,-1,-.5);
 function solveBatterArms(r,oneHand){
   r.oneHand=!!oneHand;

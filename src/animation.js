@@ -3,6 +3,7 @@ import { RUNUP, clamp, lerp, smooth } from './config.js';
 import { BR, NR, POSE, SR, bowlerF, fielders, setBatAngles, solveBatterArms, ump, umpire, umpire2 } from './players.js';
 import { game, input } from './match.js';
 import { retargetAll } from './athletes.js';
+import { BACKLIFT, strokeBat } from './strokes.js';
 
 // ================= player animation =================
 const prevPos=new Map();
@@ -21,18 +22,17 @@ function animatePlayers(dt){
     const isS=r===SR, sp=speedOf(r.root,dt);
     if(sp>.8){ r.runPh=(r.runPh||0)+dt*sp*1.25; r.pose(POSE.run(r.runPh,clamp(sp/7,.45,1)),k); setBatAngles(r,.6,-1.5,0,0,ks); r.root.updateMatrixWorld(true); solveBatterArms(r,true); continue; }
     if(!isS){ r.pose(POSE.stand(),ks); setBatAngles(r,.3,.2,0,0,ks); solveBatterArms(r,false); continue; }
-    let a=-.2,w=-.45,yaw=0,kb=ks;
-    if(active&&input.pressT!==null&&game.swingT!==undefined){
-      const u=clamp(game.swingT/.34,0,1), blk=input.dir==='block', short=d&&d.len>8.5;
-      yaw=game.swingYaw||0; kb=1;
-      if(blk){ const q=smooth(u/.4); a=lerp(-.85,.32,q); w=lerp(-1,-.3,q); yaw*=.3; }
-      else if(u<.3){ const q=u/.3; a=lerp(-.85,.15,q); w=lerp(-1,0,q); }
-      else { const q=smooth((u-.3)/.7); a=lerp(.15,input.loft?2.3:1.75,q); w=lerp(0,input.loft?1.5:1.15,q); }
-      r.pose(POSE.bat(short&&!blk?'back':'front',blk?u*.6:u),k);
-    } else if(input.charge&&(ph==='runup'||ph==='delivery'||ph==='ready')){ a=-.85; w=-1; r.pose(POSE.bat('charge',0),ks); }
-    else if(ph==='delivery'||(ph==='runup'&&game.t/RUNUP>.55)){ a=-.85; w=-1; r.pose(POSE.bat('trigger',0),ks); }
-    else { r.pose(POSE.bat('stance',0),ks); }
-    setBatAngles(r,a,w,yaw,0,kb); solveBatterArms(r,false);
+    let bat, legs='stance', legsU=0, kb=ks, kl=ks;
+    const miss=d&&d.resolved&&d.miss;
+    if(game.debugStroke){ const D=game.debugStroke; bat=D.kind==='stance'?{a:-.2,w:-.45,tilt:0,piv:1.18,yaw:0}:D.kind==='backlift'?{...BACKLIFT,tilt:0,piv:1.18,yaw:0}:strokeBat(D.kind,D.t,.2,D.yaw||0); if(bat.legs){legs=bat.legs;legsU=bat.legsU;} else legs=D.kind==='backlift'?'trigger':'stance'; kb=kl=1; }
+    else if(active&&input.pressT!==null&&game.swingT!==undefined&&game.stroke){
+      bat=strokeBat(game.stroke,game.swingT,game.swingC||.15,game.swingYaw||0); legs=bat.legs; legsU=bat.legsU; kb=1; kl=k; }
+    else if(active&&miss&&!miss.offered){ bat={a:-1.75,w:-1.6,tilt:0,piv:1.22,yaw:0}; legs='trigger'; kb=1-Math.pow(1e-4,dt); }   // leave: bat lifted out of the way
+    else if(input.charge&&(ph==='runup'||ph==='delivery'||ph==='ready')){ bat={...BACKLIFT,tilt:0,piv:1.18,yaw:0}; legs='charge'; }
+    else if(ph==='delivery'||(ph==='runup'&&game.t/RUNUP>.55)){ bat={...BACKLIFT,tilt:0,piv:1.18,yaw:0}; legs='trigger'; kb=1-Math.pow(1e-3,dt); }   // backlift as the bowler releases
+    else { const tap=ph==='ready'||ph==='runup'?Math.max(0,Math.sin(game.t*4.2))*.06:0; bat={a:-.2-tap,w:-.45+tap,tilt:0,piv:1.18,yaw:0}; }   // stance, tapping the bat
+    r.pose(POSE.bat(legs,legsU),kl);
+    setBatAngles(r,bat.a,bat.w,bat.yaw,bat.tilt,kb,bat.piv); solveBatterArms(r,false);
   }
   // bowler
   if(ph==='runup'){ const u=game.t/RUNUP; if(u<.72){ BR.runPh=(BR.runPh||0)+dt*lerp(8,12,u); BR.pose(POSE.run(BR.runPh,lerp(.7,1,u)),k); } else BR.pose(bowlAction((u-.72)/.28*.6),1-Math.pow(1e-7,dt)); }

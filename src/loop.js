@@ -43,7 +43,7 @@ function step(dt){
       if(game.t>=RUNUP) release();
       break; }
     case 'delivery': {
-      bowler.position.z=Math.min(bowler.position.z+dt*Math.max(.5,5-game.t*6),-PITCH+4.5);
+      bowler.position.z=Math.min(bowler.position.z+dt*Math.max(.5,5-game.t*6),-PITCH+4.5); bowler.position.x=Math.min(2.4,bowler.position.x+dt*2.6);
       updateDelivery(dt); break; }
     case 'live': game.lastLive=true; updateLive(dt); break;
     case 'dead':

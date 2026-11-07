@@ -1,6 +1,7 @@
 // batting.js — generated from the prototype; edit freely.
 import * as THREE from 'three';
 import { SHOT_ANGLE, keyDir, shotName, showTimingBar } from './assist.js';
+import { chooseStroke } from './strokes.js';
 import { $, DIFF, clamp, pick, rand } from './config.js';
 import { Snd } from './audio.js';
 import { breakStumps, stumpsNear } from './scene.js';
@@ -16,7 +17,12 @@ function windows(){ const d=game.del, f=(M&&M.role==='bowl'?1:DIFF[game.diff].wi
 function shot(loft){
   if(game.phase!=='delivery'||input.pressT!==null) return;
   const kd=keyDir(); if(kd) input.dir=kd;
-  input.pressT=game.t; input.loft=loft&&input.dir!=='block';
+  input.pressT=game.t;
+  { const d=game.del, x=d.atContact?d.atContact.x:.1;
+    const ang=input.dir in SHOT_ANGLE?SHOT_ANGLE[input.dir]:(x>.25?45:x<-.05?-50:5);
+    game.stroke=chooseStroke(input.dir,loft&&input.dir!=='block',d);
+    game.swingC=clamp(d.tContact-game.t,.07,.3);            // the bat reaches the ball when the ball arrives
+    game.swingYaw=clamp(-ang*Math.PI/180*.9,-1.3,1.3); } input.loft=loft&&input.dir!=='block';
   game.swingT=0;
 }
 function charge(){ if((game.phase==='runup'||game.phase==='ready')&&!input.charge){ input.charge=true; $('b-charge').classList.add('sel'); } }
@@ -60,8 +66,8 @@ function resolveContact(){
   const th=theta*Math.PI/180, ph=phi*Math.PI/180;
   const v0=new THREE.Vector3(sp*Math.cos(ph)*Math.sin(th), sp*Math.sin(ph), -sp*Math.cos(ph)*Math.cos(th));
   const p0=new THREE.Vector3(q.x,Math.max(q.y,.12),d.contactZ);
-  game.swingYaw=clamp(-theta*Math.PI/180*.7,-1.2,1.2);
   Snd.bat(cls==='perfect'?1:cls==='good'?.6:.25);
+  if(cls==='perfect'&&dir!=='block') game.shake=.14;
   startLive(p0,v0,{cls,theta,loft:input.loft,dir,name:sname});
 }
 function startMiss(offered,diff){
